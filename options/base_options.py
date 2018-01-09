@@ -8,6 +8,7 @@ class BaseOptions():
     def __init__(self):
         self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         self.initialized = False
+        torch.backends.cuda.deterministic = True
 
     def initialize(self):
         self.parser.add_argument('--dataroot', required=True, help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
