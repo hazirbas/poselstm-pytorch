@@ -462,3 +462,8 @@ class PixelDiscriminator(nn.Module):
         else:
             return self.net(input)
 
+class PoseNet(nn.Module):
+    def __init__(self, gpu_ids=[]):
+        super(PixelDiscriminator, self).__init__()
+        self.gpu_ids = gpu_ids
+        
