@@ -39,3 +39,5 @@ test/.coverage
 */**/*.dylib*
 test/data/legacy_serialized.pt
 *~
+.python-version
+pretrained_models/places-googlenet
