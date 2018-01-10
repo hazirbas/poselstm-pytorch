@@ -10,6 +10,9 @@ import numpy as np
 ###############################################################################
 
 
+def weight_init_googlenet(key, module, weights=None):
+    return module
+
 def weights_init_normal(m):
     classname = m.__class__.__name__
     # print(classname)
@@ -442,7 +445,7 @@ class PixelDiscriminator(nn.Module):
             use_bias = norm_layer.func == nn.InstanceNorm2d
         else:
             use_bias = norm_layer == nn.InstanceNorm2d
-            
+
         self.net = [
             nn.Conv2d(input_nc, ndf, kernel_size=1, stride=1, padding=0),
             nn.LeakyReLU(0.2, True),
@@ -462,8 +465,141 @@ class PixelDiscriminator(nn.Module):
         else:
             return self.net(input)
 
-class PoseNet(nn.Module):
-    def __init__(self, gpu_ids=[]):
-        super(PixelDiscriminator, self).__init__()
+# defines the local response normalization, required by GoogleNet
+class LRN(nn.Module):
+    def __init__(self, local_size=1, alpha=1.0, beta=0.75, ACROSS_CHANNELS=True):
+        super(LRN, self).__init__()
+        self.ACROSS_CHANNELS = ACROSS_CHANNELS
+        if ACROSS_CHANNELS:
+            self.average=nn.AvgPool3d(kernel_size=(local_size, 1, 1),
+                    stride=1,
+                    padding=(int((local_size-1.0)/2), 0, 0))
+        else:
+            self.average=nn.AvgPool2d(kernel_size=local_size,
+                    stride=1,
+                    padding=int((local_size-1.0)/2))
+        self.alpha = alpha
+        self.beta = beta
+
+
+    def forward(self, x):
+        if self.ACROSS_CHANNELS:
+            div = x.pow(2).unsqueeze(1)
+            div = self.average(div).squeeze(1)
+            div = div.mul(self.alpha).add(1.0).pow(self.beta)
+        else:
+            div = x.pow(2)
+            div = self.average(div)
+            div = div.mul(self.alpha).add(1.0).pow(self.beta)
+        x = x.div(div)
+        return x
+
+# define inception block for GoogleNet
+class InceptionBlock(nn.Module):
+    def __init__(self, incp, input_nc, x1_nc, x3_reduce_nc, x3_nc, x5_reduce_nc,
+                 x5_nc, proj_nc, weights=None, gpu_ids=[]):
+        super(InceptionBlock, self).__init__()
         self.gpu_ids = gpu_ids
-        
+        # first
+        self.branch_x1 = nn.Sequential(*[
+            weight_init_googlenet("inception_"+incp+"/1x1", nn.Conv2d(input_nc, x1_nc, kernel_size=1), weights),
+            nn.ReLU(inplace=True)])
+
+        self.branch_x3 = nn.Sequential(*[
+            weight_init_googlenet("inception_"+incp+"/3x3_reduce", nn.Conv2d(input_nc, x3_reduce_nc, kernel_size=1), weights),
+            nn.ReLU(inplace=True),
+            weight_init_googlenet("inception_"+incp+"/3x3", nn.Conv2d(x3_reduce_nc, x3_nc, kernel_size=3, padding=1), weights),
+            nn.ReLU(inplace=True)])
+
+        self.branch_x5 = nn.Sequential(*[
+            weight_init_googlenet("inception_"+incp+"/5x5_reduce", nn.Conv2d(input_nc, x5_reduce_nc, kernel_size=1, padding=2), weights),
+            nn.ReLU(inplace=True),
+            weight_init_googlenet("inception_"+incp+"/5x5", nn.Conv2d(x5_reduce_nc, x5_nc, kernel_size=5, padding=2), weights),
+            nn.ReLU(inplace=True)])
+
+        self.branch_proj = nn.Sequential(*[
+            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
+            weight_init_googlenet("inception_3a/pool_proj", nn.Conv2d(input_nc, proj_nc, kernel_size=1), weights),
+            nn.ReLU(inplace=True)])
+
+        if incp in ["3b", "4e"]:
+            self.pool = nn.MaxPool2d(kernel_size=3, stride=2)
+        elif incp == "5b":
+            self.pool = nn.AvgPool2d(kernel_size=7, stride=1)
+        else:
+            self.pool = None
+
+    def forward(self, input):
+        outputs = [self.branch_x1(input), self.branch_x3(input),
+                   self.branch_x5(input), self.branch_proj(input)]
+        output = torch.cat(outputs, 1)
+        if self.pool is not None:
+            return self.pool(output)
+        return output
+
+class PoseNet(nn.Module):
+    def __init__(self, input_nc, gpu_ids=[], weights=None):
+        super(PoseNet, self).__init__()
+        self.gpu_ids = gpu_ids
+        self.before_inception = nn.Sequential(*[
+            weight_init_googlenet("conv1/7x7_s2", nn.Conv2d(input_nc, 64, kernel_size=7, stride=2, padding=3), weights),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            weight_init_googlenet("pool1/norm1", LRN(local_size=5, alpha=0.0001, beta=0.75), weights),
+            weight_init_googlenet("conv2/3x3_reduce", nn.Conv2d(64, 64, kernel_size=1)),
+            nn.ReLU(inplace=True),
+            weight_init_googlenet("conv2/3x3", nn.Conv2d(64, 192, kernel_size=3, padding=1), weights),
+            nn.ReLU(inplace=True),
+            weight_init_googlenet("conv2/norm2", LRN(local_size=5, alpha=0.0001, beta=0.75), weights),
+            nn.MaxPool2d(kernel_size=3, stride=2)])
+
+        self.inception_3a = InceptionBlock("3a", 192, 64, 96, 128, 16, 32, 32, weights, gpu_ids)
+        self.inception_3b = InceptionBlock("3b", 256, 128, 128, 192, 32, 96, 64, weights, gpu_ids)
+        self.inception_4a = InceptionBlock("4a", 480, 192, 96, 208, 16, 48, 64, weights, gpu_ids)
+        self.inception_4b = InceptionBlock("4b", 512, 160, 112, 224, 24, 64, 64, weights, gpu_ids)
+        self.inception_4c = InceptionBlock("4c", 512, 128, 128, 256, 24, 64, 64, weights, gpu_ids)
+        self.inception_4d = InceptionBlock("4d", 512, 112, 144, 288, 32, 64, 64, weights, gpu_ids)
+        self.inception_4e = InceptionBlock("4e", 528, 256, 160, 320, 32, 128, 128, weights, gpu_ids)
+        self.inception_5a = InceptionBlock("5a", 832, 256, 160, 320, 32, 128, 128, weights, gpu_ids)
+        self.inception_5b = InceptionBlock("5b", 832, 384, 192, 384, 48, 128, 128, weights, gpu_ids)
+
+        self.cls1_fc1 = None
+        self.cls2_fc1 = None
+        self.cls3_fc1 = nn.Sequential(*[nn.Linear(1024, 2048),
+                                        nn.ReLU(inplace=True),
+                                        nn.Dropout(0.5)])
+
+        self.cls1_xy = nn.Linear(1024, 3)
+        self.cls1_wqrt = nn.Linear(1024, 4)
+        self.cls2_xy = nn.Linear(1024, 3)
+        self.cls2_wqrt = nn.Linear(1024, 4)
+        self.cls3_xy = nn.Linear(2048, 3)
+        self.cls3_wqrt = nn.Linear(2048, 4)
+
+        self.net = nn.Sequential(*[self.inception_3a, self.inception_3b,
+                                   self.inception_4a, self.inception_4b,
+                                   self.inception_4c, self.inception_4d,
+                                   self.inception_4e, self.inception_5a,
+                                   self.inception_5b, self.cls1_fc1,
+                                   self.cls2_fc1, self.cls3_fc1
+                                   ])
+
+    def forward(self, input, is_test=False):
+        output_bf = self.before_inception(input)
+        output_3a = self.inception_3a(outputbf)
+        output_3b = self.inception_3b(output_3a)
+        output_4a = self.inception_4a(output_3b)
+        output_4b = self.inception_4b(output_4a)
+        output_4c = self.inception_4c(output_4b)
+        output_4d = self.inception_4d(output_4c)
+        output_4e = self.inception_4e(output_4d)
+        output_5a = self.inception_5a(output_4e)
+        output_5b = self.inception_5b(output_5a)
+
+        output_cls3 = self.cls3_fc1(output5b)
+        output_cls3 = output_cls3.view(output_cls3.size(0), -1)
+        output_cls3 = [self.cls3_xy(output_cls3), self.cls3_wqrt(output_cls3)]
+
+        if not is_test:
+            return self.loss1(output4a) + self.loss2(output4d) + output_cls3
+        return output_cls3
