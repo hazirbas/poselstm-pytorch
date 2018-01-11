@@ -494,6 +494,42 @@ class LRN(nn.Module):
         x = x.div(div)
         return x
 
+# defines the regression heads for googlenet
+class RegressionHead(nn.Module):
+    def __init__(self, lossID, final_loss=False, weights=None):
+        super(RegressionHead, self).__init__()
+        if not final_loss:
+            nc = {"1": 512, "2": 528}
+            self.projection = nn.Sequential(*[nn.AvgPool2d(kernel_size=5, stride=3),
+                                              weight_init_googlenet("loss"+lossID+"/conv", nn.Conv2d(nc[lossID], 128, kernel_size=1), weights),
+                                              nn.ReLU(inplace=True)])
+            self.cls_fc_pose = nn.Sequential(*[weight_init_googlenet("loss"+lossID+"/fc", nn.Linear(2048, 1024), weights),
+                                               nn.ReLU(inplace=True),
+                                               nn.Dropout(0.7)])
+            self.cls_fc_xy = nn.Linear(1024, 3)
+            self.cls_fc_wpqr = nn.Linear(1024, 4)
+        else:
+            self.projection = nn.AvgPool2d(kernel_size=7, stride=1)
+            self.cls_fc_pose = nn.Sequential(*[nn.Linear(1024, 2048),
+                                               nn.ReLU(inplace=True),
+                                               nn.Dropout(0.5)])
+            self.cls_fc_xy = nn.Linear(2048, 3)
+            self.cls_fc_wpqr = nn.Linear(2048, 4)
+
+        # self.net = nn.Sequential(*[self.projection, self.cls_fc_pose,
+        #                            self.cls_fc_xy, self.cls_fc_wpqr])
+
+    def forward(self, input):
+        print("regression")
+        print(input.size())
+        output = self.projection(input)
+        print (output.size())
+        output = self.cls_fc_pose(output.view(output.size(0), -1))
+        print (output.size())
+        output_xy = self.cls_fc_xy(output)
+        output_wpqr = self.cls_fc_wpqr(output)
+        return [output_xy, output_wpqr]
+
 # define inception block for GoogleNet
 class InceptionBlock(nn.Module):
     def __init__(self, incp, input_nc, x1_nc, x3_reduce_nc, x3_nc, x5_reduce_nc,
@@ -512,7 +548,7 @@ class InceptionBlock(nn.Module):
             nn.ReLU(inplace=True)])
 
         self.branch_x5 = nn.Sequential(*[
-            weight_init_googlenet("inception_"+incp+"/5x5_reduce", nn.Conv2d(input_nc, x5_reduce_nc, kernel_size=1, padding=2), weights),
+            weight_init_googlenet("inception_"+incp+"/5x5_reduce", nn.Conv2d(input_nc, x5_reduce_nc, kernel_size=1), weights),
             nn.ReLU(inplace=True),
             weight_init_googlenet("inception_"+incp+"/5x5", nn.Conv2d(x5_reduce_nc, x5_nc, kernel_size=5, padding=2), weights),
             nn.ReLU(inplace=True)])
@@ -523,15 +559,14 @@ class InceptionBlock(nn.Module):
             nn.ReLU(inplace=True)])
 
         if incp in ["3b", "4e"]:
-            self.pool = nn.MaxPool2d(kernel_size=3, stride=2)
-        elif incp == "5b":
-            self.pool = nn.AvgPool2d(kernel_size=7, stride=1)
+            self.pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         else:
             self.pool = None
 
     def forward(self, input):
         outputs = [self.branch_x1(input), self.branch_x3(input),
                    self.branch_x5(input), self.branch_proj(input)]
+        print([[o.size()] for o in outputs])
         output = torch.cat(outputs, 1)
         if self.pool is not None:
             return self.pool(output)
@@ -544,14 +579,15 @@ class PoseNet(nn.Module):
         self.before_inception = nn.Sequential(*[
             weight_init_googlenet("conv1/7x7_s2", nn.Conv2d(input_nc, 64, kernel_size=7, stride=2, padding=3), weights),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             weight_init_googlenet("pool1/norm1", LRN(local_size=5, alpha=0.0001, beta=0.75), weights),
             weight_init_googlenet("conv2/3x3_reduce", nn.Conv2d(64, 64, kernel_size=1)),
             nn.ReLU(inplace=True),
             weight_init_googlenet("conv2/3x3", nn.Conv2d(64, 192, kernel_size=3, padding=1), weights),
             nn.ReLU(inplace=True),
             weight_init_googlenet("conv2/norm2", LRN(local_size=5, alpha=0.0001, beta=0.75), weights),
-            nn.MaxPool2d(kernel_size=3, stride=2)])
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            ])
 
         self.inception_3a = InceptionBlock("3a", 192, 64, 96, 128, 16, 32, 32, weights, gpu_ids)
         self.inception_3b = InceptionBlock("3b", 256, 128, 128, 192, 32, 96, 64, weights, gpu_ids)
@@ -563,30 +599,22 @@ class PoseNet(nn.Module):
         self.inception_5a = InceptionBlock("5a", 832, 256, 160, 320, 32, 128, 128, weights, gpu_ids)
         self.inception_5b = InceptionBlock("5b", 832, 384, 192, 384, 48, 128, 128, weights, gpu_ids)
 
-        self.cls1_fc1 = None
-        self.cls2_fc1 = None
-        self.cls3_fc1 = nn.Sequential(*[nn.Linear(1024, 2048),
-                                        nn.ReLU(inplace=True),
-                                        nn.Dropout(0.5)])
-
-        self.cls1_xy = nn.Linear(1024, 3)
-        self.cls1_wqrt = nn.Linear(1024, 4)
-        self.cls2_xy = nn.Linear(1024, 3)
-        self.cls2_wqrt = nn.Linear(1024, 4)
-        self.cls3_xy = nn.Linear(2048, 3)
-        self.cls3_wqrt = nn.Linear(2048, 4)
+        self.cls1_fc = RegressionHead(lossID="1", final_loss=False, weights=weights)
+        self.cls2_fc = RegressionHead(lossID="2", final_loss=False, weights=weights)
+        self.cls3_fc = RegressionHead(lossID="3", final_loss=True, weights=weights)
 
         self.net = nn.Sequential(*[self.inception_3a, self.inception_3b,
                                    self.inception_4a, self.inception_4b,
                                    self.inception_4c, self.inception_4d,
                                    self.inception_4e, self.inception_5a,
-                                   self.inception_5b, self.cls1_fc1,
-                                   self.cls2_fc1, self.cls3_fc1
+                                   self.inception_5b, self.cls1_fc,
+                                   self.cls2_fc, self.cls3_fc
                                    ])
 
     def forward(self, input, is_test=False):
         output_bf = self.before_inception(input)
-        output_3a = self.inception_3a(outputbf)
+        print (output_bf.size())
+        output_3a = self.inception_3a(output_bf)
         output_3b = self.inception_3b(output_3a)
         output_4a = self.inception_4a(output_3b)
         output_4b = self.inception_4b(output_4a)
@@ -596,10 +624,6 @@ class PoseNet(nn.Module):
         output_5a = self.inception_5a(output_4e)
         output_5b = self.inception_5b(output_5a)
 
-        output_cls3 = self.cls3_fc1(output5b)
-        output_cls3 = output_cls3.view(output_cls3.size(0), -1)
-        output_cls3 = [self.cls3_xy(output_cls3), self.cls3_wqrt(output_cls3)]
-
         if not is_test:
-            return self.loss1(output4a) + self.loss2(output4d) + output_cls3
-        return output_cls3
+            return self.cls1_fc(output_4a) + self.cls2_fc(output_4d) +  self.cls3_fc(output_5b)
+        return self.cls3_fc(output_5b)
