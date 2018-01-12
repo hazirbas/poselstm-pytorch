@@ -11,6 +11,17 @@ import numpy as np
 
 
 def weight_init_googlenet(key, module, weights=None):
+    if weights is None:
+        init.constant(module.bias.data, 0.0)
+        if key == "xy":
+            init.normal(module.weight.data, 0.0, 0.5)
+            return module
+        init.normal(module.weight.data, 0.0, 0.01)
+        return module
+    else:
+        print(key, weights[(key+"_1").encode()].shape, module.bias.size())
+        module.bias.data[...] = torch.from_numpy(weights[(key+"_1").encode()])
+        module.weight.data[...] = torch.from_numpy(weights[(key+"_0").encode()])
     return module
 
 def weights_init_normal(m):
@@ -496,36 +507,29 @@ class LRN(nn.Module):
 
 # defines the regression heads for googlenet
 class RegressionHead(nn.Module):
-    def __init__(self, lossID, final_loss=False, weights=None):
+    def __init__(self, lossID, weights=None):
         super(RegressionHead, self).__init__()
-        if not final_loss:
-            nc = {"1": 512, "2": 528}
+        if lossID != "loss3":
+            nc = {"loss1": 512, "loss2": 528}
             self.projection = nn.Sequential(*[nn.AvgPool2d(kernel_size=5, stride=3),
-                                              weight_init_googlenet("loss"+lossID+"/conv", nn.Conv2d(nc[lossID], 128, kernel_size=1), weights),
+                                              weight_init_googlenet(lossID+"/conv", nn.Conv2d(nc[lossID], 128, kernel_size=1), weights),
                                               nn.ReLU(inplace=True)])
-            self.cls_fc_pose = nn.Sequential(*[weight_init_googlenet("loss"+lossID+"/fc", nn.Linear(2048, 1024), weights),
+            self.cls_fc_pose = nn.Sequential(*[weight_init_googlenet(lossID+"/fc", nn.Linear(2048, 1024), weights),
                                                nn.ReLU(inplace=True),
                                                nn.Dropout(0.7)])
-            self.cls_fc_xy = nn.Linear(1024, 3)
-            self.cls_fc_wpqr = nn.Linear(1024, 4)
+            self.cls_fc_xy = weight_init_googlenet("xy", nn.Linear(1024, 3))
+            self.cls_fc_wpqr = weight_init_googlenet("wpqr", nn.Linear(1024, 4))
         else:
             self.projection = nn.AvgPool2d(kernel_size=7, stride=1)
-            self.cls_fc_pose = nn.Sequential(*[nn.Linear(1024, 2048),
+            self.cls_fc_pose = nn.Sequential(*[weight_init_googlenet("pose", nn.Linear(1024, 2048)),
                                                nn.ReLU(inplace=True),
                                                nn.Dropout(0.5)])
-            self.cls_fc_xy = nn.Linear(2048, 3)
-            self.cls_fc_wpqr = nn.Linear(2048, 4)
-
-        # self.net = nn.Sequential(*[self.projection, self.cls_fc_pose,
-        #                            self.cls_fc_xy, self.cls_fc_wpqr])
+            self.cls_fc_xy = weight_init_googlenet("xy", nn.Linear(2048, 3))
+            self.cls_fc_wpqr = weight_init_googlenet("wpqr", nn.Linear(2048, 4))
 
     def forward(self, input):
-        print("regression")
-        print(input.size())
         output = self.projection(input)
-        print (output.size())
         output = self.cls_fc_pose(output.view(output.size(0), -1))
-        print (output.size())
         output_xy = self.cls_fc_xy(output)
         output_wpqr = self.cls_fc_wpqr(output)
         return [output_xy, output_wpqr]
@@ -555,7 +559,7 @@ class InceptionBlock(nn.Module):
 
         self.branch_proj = nn.Sequential(*[
             nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
-            weight_init_googlenet("inception_3a/pool_proj", nn.Conv2d(input_nc, proj_nc, kernel_size=1), weights),
+            weight_init_googlenet("inception_"+incp+"/pool_proj", nn.Conv2d(input_nc, proj_nc, kernel_size=1), weights),
             nn.ReLU(inplace=True)])
 
         if incp in ["3b", "4e"]:
@@ -566,26 +570,27 @@ class InceptionBlock(nn.Module):
     def forward(self, input):
         outputs = [self.branch_x1(input), self.branch_x3(input),
                    self.branch_x5(input), self.branch_proj(input)]
-        print([[o.size()] for o in outputs])
+        # print([[o.size()] for o in outputs])
         output = torch.cat(outputs, 1)
         if self.pool is not None:
             return self.pool(output)
         return output
 
 class PoseNet(nn.Module):
-    def __init__(self, input_nc, gpu_ids=[], weights=None):
+    def __init__(self, input_nc, gpu_ids=[], weights=None, is_test=False):
         super(PoseNet, self).__init__()
         self.gpu_ids = gpu_ids
+        self.is_test = is_test
         self.before_inception = nn.Sequential(*[
             weight_init_googlenet("conv1/7x7_s2", nn.Conv2d(input_nc, 64, kernel_size=7, stride=2, padding=3), weights),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            weight_init_googlenet("pool1/norm1", LRN(local_size=5, alpha=0.0001, beta=0.75), weights),
+            LRN(local_size=5, alpha=0.0001, beta=0.75),
             weight_init_googlenet("conv2/3x3_reduce", nn.Conv2d(64, 64, kernel_size=1)),
             nn.ReLU(inplace=True),
             weight_init_googlenet("conv2/3x3", nn.Conv2d(64, 192, kernel_size=3, padding=1), weights),
             nn.ReLU(inplace=True),
-            weight_init_googlenet("conv2/norm2", LRN(local_size=5, alpha=0.0001, beta=0.75), weights),
+            LRN(local_size=5, alpha=0.0001, beta=0.75),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
             ])
 
@@ -599,21 +604,25 @@ class PoseNet(nn.Module):
         self.inception_5a = InceptionBlock("5a", 832, 256, 160, 320, 32, 128, 128, weights, gpu_ids)
         self.inception_5b = InceptionBlock("5b", 832, 384, 192, 384, 48, 128, 128, weights, gpu_ids)
 
-        self.cls1_fc = RegressionHead(lossID="1", final_loss=False, weights=weights)
-        self.cls2_fc = RegressionHead(lossID="2", final_loss=False, weights=weights)
-        self.cls3_fc = RegressionHead(lossID="3", final_loss=True, weights=weights)
+        self.cls1_fc = RegressionHead(lossID="loss1", weights=weights)
+        self.cls2_fc = RegressionHead(lossID="loss2", weights=weights)
+        self.cls3_fc = RegressionHead(lossID="loss3", weights=weights)
 
-        self.net = nn.Sequential(*[self.inception_3a, self.inception_3b,
+        self.model = nn.Sequential(*[self.inception_3a, self.inception_3b,
                                    self.inception_4a, self.inception_4b,
                                    self.inception_4c, self.inception_4d,
                                    self.inception_4e, self.inception_5a,
                                    self.inception_5b, self.cls1_fc,
                                    self.cls2_fc, self.cls3_fc
                                    ])
+        if self.is_test:
+            self.model.eval() # ensure Dropout is deactivated during training
+        if self.gpu_ids:
+            self.model.cuda()
 
     def forward(self, input, is_test=False):
+
         output_bf = self.before_inception(input)
-        print (output_bf.size())
         output_3a = self.inception_3a(output_bf)
         output_3b = self.inception_3b(output_3a)
         output_4a = self.inception_4a(output_3b)
@@ -624,6 +633,6 @@ class PoseNet(nn.Module):
         output_5a = self.inception_5a(output_4e)
         output_5b = self.inception_5b(output_5a)
 
-        if not is_test:
+        if not self.is_test:
             return self.cls1_fc(output_4a) + self.cls2_fc(output_4d) +  self.cls3_fc(output_5b)
         return self.cls3_fc(output_5b)
