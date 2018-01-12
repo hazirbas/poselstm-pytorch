@@ -113,9 +113,8 @@ def get_scheduler(optimizer, opt):
     return scheduler
 
 
-def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch',
-             use_dropout=False, init_type='normal',
-             init_from=None, isTest=False, gpu_ids=[]):
+def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch', use_dropout=False, init_type='normal', gpu_ids=[],
+             init_from=None, isTest=False):
     netG = None
     use_gpu = len(gpu_ids) > 0
     norm_layer = get_norm_layer(norm_type=norm)
@@ -132,7 +131,7 @@ def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch',
     elif which_model_netG == 'unet_256':
         netG = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout, gpu_ids=gpu_ids)
     elif which_model_netG == 'posenet':
-        netG = Posenet(self, input_nc, weights=init_from, isTest=False,  gpu_ids=gpu_ids)
+        netG = Posenet(self, input_nc, weights=init_from, isTest=isTest,  gpu_ids=gpu_ids)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % which_model_netG)
     if len(gpu_ids) > 0:

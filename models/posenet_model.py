@@ -9,9 +9,9 @@ from .base_model import BaseModel
 from . import networks
 
 
-class Pix2PixModel(BaseModel):
+class PoseNetModel(BaseModel):
     def name(self):
-        return 'Pix2PixModel'
+        return 'PoseNetModel'
 
     def initialize(self, opt):
         BaseModel.initialize(self, opt)
@@ -23,34 +23,25 @@ class Pix2PixModel(BaseModel):
                                    opt.fineSize, opt.fineSize)
 
         # load/define networks
-        self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf,
-                                      opt.which_model_netG, opt.norm, not opt.no_dropout, opt.init_type, self.gpu_ids)
-        if self.isTrain:
-            use_sigmoid = opt.no_lsgan
-            self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf,
-                                          opt.which_model_netD,
-                                          opt.n_layers_D, opt.norm, use_sigmoid, opt.init_type, self.gpu_ids)
+        self.netG = networks.define_G(opt.input_nc, None, None, opt.which_model_netG,
+                                      init_from=googlenet_weights, isTest=not self.isTrain,
+                                      gpu_ids = self.gpu_ids)
+
         if not self.isTrain or opt.continue_train:
             self.load_network(self.netG, 'G', opt.which_epoch)
-            if self.isTrain:
-                self.load_network(self.netD, 'D', opt.which_epoch)
 
         if self.isTrain:
-            self.fake_AB_pool = ImagePool(opt.pool_size)
             self.old_lr = opt.lr
             # define loss functions
-            self.criterionGAN = networks.GANLoss(use_lsgan=not opt.no_lsgan, tensor=self.Tensor)
-            self.criterionL1 = torch.nn.L1Loss()
+            self.criterionXY = [torch.nn.MSELoss()] * 3
+            self.criterionWPQR = [torch.nn.MSELoss()] * 3
 
             # initialize optimizers
             self.schedulers = []
             self.optimizers = []
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
                                                 lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_D = torch.optim.Adam(self.netD.parameters(),
-                                                lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
-            self.optimizers.append(self.optimizer_D)
             for optimizer in self.optimizers:
                 self.schedulers.append(networks.get_scheduler(optimizer, opt))
 
@@ -82,23 +73,6 @@ class Pix2PixModel(BaseModel):
     # get image paths
     def get_image_paths(self):
         return self.image_paths
-
-    def backward_D(self):
-        # Fake
-        # stop backprop to the generator by detaching fake_B
-        fake_AB = self.fake_AB_pool.query(torch.cat((self.real_A, self.fake_B), 1).data)
-        pred_fake = self.netD(fake_AB.detach())
-        self.loss_D_fake = self.criterionGAN(pred_fake, False)
-
-        # Real
-        real_AB = torch.cat((self.real_A, self.real_B), 1)
-        pred_real = self.netD(real_AB)
-        self.loss_D_real = self.criterionGAN(pred_real, True)
-
-        # Combined loss
-        self.loss_D = (self.loss_D_fake + self.loss_D_real) * 0.5
-
-        self.loss_D.backward()
 
     def backward_G(self):
         # First, G(A) should fake the discriminator
