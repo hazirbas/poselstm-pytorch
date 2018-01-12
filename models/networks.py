@@ -113,7 +113,9 @@ def get_scheduler(optimizer, opt):
     return scheduler
 
 
-def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch', use_dropout=False, init_type='normal', gpu_ids=[]):
+def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch',
+             use_dropout=False, init_type='normal',
+             init_from=None, isTest=False, gpu_ids=[]):
     netG = None
     use_gpu = len(gpu_ids) > 0
     norm_layer = get_norm_layer(norm_type=norm)
@@ -129,11 +131,14 @@ def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch', use_dropo
         netG = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout, gpu_ids=gpu_ids)
     elif which_model_netG == 'unet_256':
         netG = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout, gpu_ids=gpu_ids)
+    elif which_model_netG == 'posenet':
+        netG = Posenet(self, input_nc, weights=init_from, isTest=False,  gpu_ids=gpu_ids)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % which_model_netG)
     if len(gpu_ids) > 0:
         netG.cuda(gpu_ids[0])
-    init_weights(netG, init_type=init_type)
+    if which_model_netG != 'posenet':
+        init_weights(netG, init_type=init_type)
     return netG
 
 
@@ -577,10 +582,10 @@ class InceptionBlock(nn.Module):
         return output
 
 class PoseNet(nn.Module):
-    def __init__(self, input_nc, gpu_ids=[], weights=None, is_test=False):
+    def __init__(self, input_nc, weights=None, isTest=False,  gpu_ids=[]):
         super(PoseNet, self).__init__()
         self.gpu_ids = gpu_ids
-        self.is_test = is_test
+        self.isTest = isTest
         self.before_inception = nn.Sequential(*[
             weight_init_googlenet("conv1/7x7_s2", nn.Conv2d(input_nc, 64, kernel_size=7, stride=2, padding=3), weights),
             nn.ReLU(inplace=True),
@@ -615,12 +620,10 @@ class PoseNet(nn.Module):
                                    self.inception_5b, self.cls1_fc,
                                    self.cls2_fc, self.cls3_fc
                                    ])
-        if self.is_test:
-            self.model.eval() # ensure Dropout is deactivated during training
-        if self.gpu_ids:
-            self.model.cuda()
+        if self.isTest:
+            self.model.eval() # ensure Dropout is deactivated during test
 
-    def forward(self, input, is_test=False):
+    def forward(self, input):
 
         output_bf = self.before_inception(input)
         output_3a = self.inception_3a(output_bf)
@@ -633,6 +636,6 @@ class PoseNet(nn.Module):
         output_5a = self.inception_5a(output_4e)
         output_5b = self.inception_5b(output_5a)
 
-        if not self.is_test:
+        if not self.isTest:
             return self.cls1_fc(output_4a) + self.cls2_fc(output_4d) +  self.cls3_fc(output_5b)
         return self.cls3_fc(output_5b)
