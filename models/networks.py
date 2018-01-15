@@ -13,7 +13,7 @@ import numpy as np
 def weight_init_googlenet(key, module, weights=None):
     if weights is None:
         init.constant(module.bias.data, 0.0)
-        if key == "xy":
+        if key == "XYZ":
             init.normal(module.weight.data, 0.0, 0.5)
             return module
         init.normal(module.weight.data, 0.0, 0.01)
@@ -131,7 +131,7 @@ def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch', use_dropo
     elif which_model_netG == 'unet_256':
         netG = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout, gpu_ids=gpu_ids)
     elif which_model_netG == 'posenet':
-        netG = Posenet(self, input_nc, weights=init_from, isTest=isTest,  gpu_ids=gpu_ids)
+        netG = PoseNet(input_nc, weights=init_from, isTest=isTest, gpu_ids=gpu_ids)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % which_model_netG)
     if len(gpu_ids) > 0:
@@ -521,15 +521,15 @@ class RegressionHead(nn.Module):
             self.cls_fc_pose = nn.Sequential(*[weight_init_googlenet(lossID+"/fc", nn.Linear(2048, 1024), weights),
                                                nn.ReLU(inplace=True),
                                                nn.Dropout(0.7)])
-            self.cls_fc_xy = weight_init_googlenet("xy", nn.Linear(1024, 3))
-            self.cls_fc_wpqr = weight_init_googlenet("wpqr", nn.Linear(1024, 4))
+            self.cls_fc_xy = weight_init_googlenet("XYZ", nn.Linear(1024, 3))
+            self.cls_fc_wpqr = weight_init_googlenet("WPQR", nn.Linear(1024, 4))
         else:
             self.projection = nn.AvgPool2d(kernel_size=7, stride=1)
             self.cls_fc_pose = nn.Sequential(*[weight_init_googlenet("pose", nn.Linear(1024, 2048)),
                                                nn.ReLU(inplace=True),
                                                nn.Dropout(0.5)])
-            self.cls_fc_xy = weight_init_googlenet("xy", nn.Linear(2048, 3))
-            self.cls_fc_wpqr = weight_init_googlenet("wpqr", nn.Linear(2048, 4))
+            self.cls_fc_xy = weight_init_googlenet("XYZ", nn.Linear(2048, 3))
+            self.cls_fc_wpqr = weight_init_googlenet("WPQR", nn.Linear(2048, 4))
 
     def forward(self, input):
         output = self.projection(input)

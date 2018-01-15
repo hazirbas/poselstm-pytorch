@@ -10,6 +10,9 @@ def CreateDataset(opt):
     elif opt.dataset_mode == 'unaligned':
         from data.unaligned_dataset import UnalignedDataset
         dataset = UnalignedDataset()
+    elif opt.dataset_mode == 'unaligned_posenet':
+        from data.unaligned_posenet_dataset import UnalignedPoseNetDataset
+        dataset = UnalignedPoseNetDataset()
     elif opt.dataset_mode == 'single':
         from data.single_dataset import SingleDataset
         dataset = SingleDataset()

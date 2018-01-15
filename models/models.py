@@ -10,6 +10,9 @@ def create_model(opt):
         assert(opt.dataset_mode == 'aligned')
         from .pix2pix_model import Pix2PixModel
         model = Pix2PixModel()
+    elif opt.model == 'posenet':
+        from .posenet_model import PoseNetModel
+        model = PoseNetModel()
     elif opt.model == 'test':
         assert(opt.dataset_mode == 'single')
         from .test_model import TestModel
