@@ -2,13 +2,17 @@ import argparse
 import os
 from util import util
 import torch
-
+import numpy
+import random
 
 class BaseOptions():
     def __init__(self):
         self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         self.initialized = False
         torch.backends.cudnn.deterministic = True
+        torch.manual_seed(0)
+        numpy.random.seed(0)
+        random.seed(0)
 
     def initialize(self):
         self.parser.add_argument('--dataroot', required=True, help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
@@ -31,7 +35,7 @@ class BaseOptions():
         self.parser.add_argument('--nThreads', default=2, type=int, help='# threads for loading data')
         self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         self.parser.add_argument('--norm', type=str, default='instance', help='instance normalization or batch normalization')
-        self.parser.add_argument('--serial_batches', action='store_false', help='if true, takes images in order to make batches, otherwise takes them randomly')
+        self.parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')
         self.parser.add_argument('--display_winsize', type=int, default=224,  help='display window size')
         self.parser.add_argument('--display_id', type=int, default=1, help='window id of the web display')
         self.parser.add_argument('--display_port', type=int, default=8097, help='visdom port of the web display')

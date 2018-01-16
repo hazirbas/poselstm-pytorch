@@ -39,6 +39,7 @@ for i, data in enumerate(dataset):
     err.append([err_p, err_o])
 
 # webpage.save()
-print(numpy.median(err, axis=0))
+print()
+# print(numpy.median(err, axis=0))
 print("median position: {0:.2f}".format(numpy.median(err_pos)))
 print("median orientat: {0:.2f}".format(numpy.median(err_ori)))

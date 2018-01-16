@@ -8,6 +8,7 @@ from util.image_pool import ImagePool
 from .base_model import BaseModel
 from . import networks
 import pickle
+import numpy
 
 class PoseNetModel(BaseModel):
     def name(self):
@@ -25,6 +26,7 @@ class PoseNetModel(BaseModel):
         googlenet_file = open("/remwork/atcremers72/hazirbas/projects/posenet_bashing/pretrained_models/places-googlenet/places-googlenet.pickle", "rb")
         googlenet_weights = pickle.load(googlenet_file, encoding="bytes")
         googlenet_file.close()
+        self.mean_image = np.load(os.path.join(opt.dataroot , 'mean_image.npy'))
 
         self.netG = networks.define_G(opt.input_nc, None, None, opt.which_model_netG,
                                       init_from=googlenet_weights, isTest=not self.isTrain,
@@ -43,8 +45,8 @@ class PoseNetModel(BaseModel):
             self.schedulers = []
             self.optimizers = []
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
-                                                lr=opt.lr, eps=1,
-                                                weight_decay=0.0625,
+                                                lr=opt.lr, eps=0.1,
+                                                weight_decay=0.0002,
                                                 betas=(self.opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             # for optimizer in self.optimizers:
@@ -108,8 +110,9 @@ class PoseNetModel(BaseModel):
                                 ])
 
         # print(torch.cat(self.fake_B, 1), self.real_B)
+        ori_distance = torch.acos(torch.abs(self.fake_B[1].mul(self.real_B[:, 3:]).sum()))
         return [torch.dist(self.fake_B[0], self.real_B[:, 0:3])[0].data[0],
-                torch.dist(self.fake_B[1], self.real_B[:, 3:])[0].data[0],
+                2*180/numpy.pi * ori_distance[0].data[0],
                ]
 
     def get_current_visuals(self):
