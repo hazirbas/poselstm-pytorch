@@ -536,7 +536,8 @@ class RegressionHead(nn.Module):
         output = self.cls_fc_pose(output.view(output.size(0), -1))
         output_xy = self.cls_fc_xy(output)
         output_wpqr = self.cls_fc_wpqr(output)
-        return [output_xy, output_wpqr]
+        norm = torch.norm(output_wpqr, p=2, dim=1, keepdim=True)
+        return [output_xy, output_wpqr.div(norm)]
 
 # define inception block for GoogleNet
 class InceptionBlock(nn.Module):

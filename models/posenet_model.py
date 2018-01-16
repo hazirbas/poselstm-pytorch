@@ -47,8 +47,8 @@ class PoseNetModel(BaseModel):
                                                 weight_decay=0.0625,
                                                 betas=(self.opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
-            for optimizer in self.optimizers:
-                self.schedulers.append(networks.get_scheduler(optimizer, opt))
+            # for optimizer in self.optimizers:
+            #     self.schedulers.append(networks.get_scheduler(optimizer, opt))
 
         print('---------- Networks initialized -------------')
         networks.print_network(self.netG)
@@ -57,9 +57,9 @@ class PoseNetModel(BaseModel):
     def set_input(self, input):
         input_A = input['A']
         input_B = input['B']
+        self.image_paths = input['A_paths']
         self.input_A.resize_(input_A.size()).copy_(input_A)
         self.input_B.resize_(input_B.size()).copy_(input_B)
-        self.image_paths = 'A_paths'
 
     def forward(self):
         self.real_A = Variable(self.input_A)
@@ -78,14 +78,18 @@ class PoseNetModel(BaseModel):
 
     def backward_G(self):
         self.loss_G = 0
-        self.loss_aux = np.array([0, 0, 0])
+        self.loss_aux = np.array([0, 0, 0, 0, 0])
         loss_weights = [self.opt.beta/0.3, self.opt.beta/0.3, self.opt.beta]
-        for l, lambda_ in enumerate(loss_weights):
+        for l, beta in enumerate(loss_weights):
             ## normalize rotation
-            norm = torch.norm(self.fake_B[2*l+1], p=2, dim=1, keepdim=True)
-            self.loss_G += self.criterionXYZ[l](self.fake_B[2*l], self.real_B[:, 0:3]) + \
-                           self.criterionWPQR[l](self.fake_B[2*l+1].div(norm), self.real_B[:, 3:]) * lambda_
+            # norm = torch.norm(self.fake_B[2*l+1], p=2, dim=1, keepdim=True)
+            mse_pos = self.criterionXYZ[l](self.fake_B[2*l], self.real_B[:, 0:3])
+            mse_ori = self.criterionWPQR[l](self.fake_B[2*l+1], self.real_B[:, 3:]) * beta
+            self.loss_G += mse_pos + mse_ori
             self.loss_aux[l] = self.loss_G.data[0]
+            if l == 2:
+                self.loss_aux[l+1] = mse_pos.data[0]
+                self.loss_aux[l+2] = mse_ori.data[0]
         self.loss_G.backward()
 
     def optimize_parameters(self):
@@ -95,10 +99,18 @@ class PoseNetModel(BaseModel):
         self.optimizer_G.step()
 
     def get_current_errors(self):
-        return OrderedDict([('G_aux1', self.loss_aux[0]),
-                            ('G_aux2', self.loss_aux[1] - self.loss_aux[0]),
-                            ('G_final', self.loss_aux[2] - self.loss_aux[1].sum()),
-                            ])
+        if self.opt.isTrain:
+            return OrderedDict([('G_aux1', self.loss_aux[0]),
+                                ('G_aux2', self.loss_aux[1] - self.loss_aux[0]),
+                                ('G_final', self.loss_aux[2] - self.loss_aux[1].sum()),
+                                ('mse_pos_final', self.loss_aux[3]),
+                                ('mse_ori_final', self.loss_aux[4]),
+                                ])
+
+        # print(torch.cat(self.fake_B, 1), self.real_B)
+        return [torch.dist(self.fake_B[0], self.real_B[:, 0:3])[0].data[0],
+                torch.dist(self.fake_B[1], self.real_B[:, 3:])[0].data[0],
+               ]
 
     def get_current_visuals(self):
         real_A = util.tensor2im(self.real_A.data)

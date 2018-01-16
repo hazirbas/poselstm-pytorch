@@ -44,10 +44,12 @@ def get_transform(opt):
 #     h = int(target_width * oh / ow)
 #     return img.resize((w, h), Image.BICUBIC)
 
-def __scale_width(img, target_width):
+def __scale_width(img, target_size):
     ow, oh = img.size
-    if (ow == target_width):
-        return img
-    w = target_width
-    h = int(target_width * ow / oh)
+    if ow < oh:
+        w = target_width
+        h = int(target_size * oh / ow)
+    else:
+        w = int(target_size * ow / oh)
+        h = target_size
     return img.resize((w, h), Image.BICUBIC)
