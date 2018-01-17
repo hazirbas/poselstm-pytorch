@@ -80,7 +80,7 @@ class PoseNetModel(BaseModel):
 
     def backward_G(self):
         self.loss_G = 0
-        self.loss_aux = np.array([0, 0, 0, 0, 0])
+        self.loss_aux = np.array([0, 0, 0, 0, 0], dtype=np.float)
         loss_weights = [self.opt.beta/0.3, self.opt.beta/0.3, self.opt.beta]
         for l, beta in enumerate(loss_weights):
             ## normalize rotation
