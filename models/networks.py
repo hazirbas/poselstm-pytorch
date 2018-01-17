@@ -19,7 +19,7 @@ def weight_init_googlenet(key, module, weights=None):
         init.normal(module.weight.data, 0.0, 0.01)
         return module
     else:
-        print(key, weights[(key+"_1").encode()].shape, module.bias.size())
+        # print(key, weights[(key+"_1").encode()].shape, module.bias.size())
         module.bias.data[...] = torch.from_numpy(weights[(key+"_1").encode()])
         module.weight.data[...] = torch.from_numpy(weights[(key+"_0").encode()])
     return module
