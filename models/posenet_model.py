@@ -45,8 +45,8 @@ class PoseNetModel(BaseModel):
             self.schedulers = []
             self.optimizers = []
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
-                                                lr=opt.lr, eps=0.1,
-                                                weight_decay=0.0002,
+                                                lr=opt.lr, eps=1,
+                                                weight_decay=0.0625,
                                                 betas=(self.opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             # for optimizer in self.optimizers:
@@ -109,11 +109,9 @@ class PoseNetModel(BaseModel):
                                 ('mse_ori_final', self.loss_aux[4]),
                                 ])
 
-        # print(torch.cat(self.fake_B, 1), self.real_B)
         ori_distance = torch.acos(torch.abs(self.fake_B[1].mul(self.real_B[:, 3:]).sum()))
         return [torch.dist(self.fake_B[0], self.real_B[:, 0:3])[0].data[0],
-                2*180/numpy.pi * ori_distance[0].data[0],
-               ]
+                2*180/numpy.pi * ori_distance[0].data[0]]
 
     def get_current_visuals(self):
         real_A = util.tensor2im(self.real_A.data)
