@@ -24,10 +24,15 @@ class Visualizer():
             self.img_dir = os.path.join(self.web_dir, 'images')
             print('create web directory %s...' % self.web_dir)
             util.mkdirs([self.web_dir, self.img_dir])
-        self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
-        with open(self.log_name, "a") as log_file:
-            now = time.strftime("%c")
-            log_file.write('================ Training Loss (%s) ================\n' % now)
+        if opt.isTrain:
+            self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
+            with open(self.log_name, "w") as log_file:
+                now = time.strftime("%c")
+                log_file.write('================ Training Loss (%s) ================\n' % now)
+        else:
+            self.log_name = os.path.join(opt.results_dir, opt.name, '%s_%s.txt' % (opt.phase, opt.which_epoch))
+            with open(self.log_name, "w") as log_file:
+                log_file.close()
 
     def reset(self):
         self.saved = False
@@ -142,3 +147,8 @@ class Visualizer():
             txts.append(label)
             links.append(image_name)
         webpage.add_images(ims, txts, links, width=self.win_size)
+
+    def save_estimated_pose(self, image_path, pose):
+        with open(self.log_name, "a") as log_file:
+            pose_str = ''.join('%.6f ' % p for p in pose)
+            log_file.write('%s %s\n' % (image_path, pose_str))
