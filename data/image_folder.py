@@ -31,7 +31,7 @@ def make_dataset(dir):
                 path = os.path.join(root, fname)
                 images.append(path)
 
-    return images
+    return sorted(images)
 
 
 def default_loader(path):
