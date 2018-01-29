@@ -109,9 +109,15 @@ class PoseNetModel(BaseModel):
                                 ('mse_ori_final', self.loss_aux[4]),
                                 ])
 
-        ori_distance = torch.acos(torch.abs(self.fake_B[1].mul(self.real_B[:, 3:]).sum()))
-        return [torch.dist(self.fake_B[0], self.real_B[:, 0:3])[0].data[0],
-                2*180/numpy.pi * ori_distance[0].data[0]]
+        pos_distance = torch.dist(self.fake_B[0], self.real_B[:, 0:3])
+        abs_distance = torch.abs(self.fake_B[1].mul(self.real_B[:, 3:])).sum()
+        abs_distance = torch.clamp(abs_distance, min=-1, max=1)
+        ori_distance = 2*180/numpy.pi* torch.acos(abs_distance)
+        return [pos_distance[0].data[0], ori_distance[0].data[0]]
+
+    def get_current_pose(self):
+        return numpy.concatenate((self.fake_B[0].data[0].cpu().numpy(),
+                                  self.fake_B[1].data[0].cpu().numpy()))
 
     def get_current_visuals(self):
         real_A = util.tensor2im(self.real_A.data)

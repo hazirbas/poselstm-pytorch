@@ -20,6 +20,9 @@ visualizer = Visualizer(opt)
 # create website
 # web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
 # webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.which_epoch))
+results_dir = os.path.join(opt.results_dir, opt.name)
+if not os.path.exists(results_dir):
+    os.makedirs(results_dir)
 # test
 err_pos = []
 err_ori = []
@@ -29,11 +32,13 @@ for i, data in enumerate(dataset):
     #     break
     model.set_input(data)
     model.test()
-    # visuals = model.get_current_visuals()
-    img_path = model.get_image_paths()
-    print('%04d: process image... %s' % (i, img_path), end='\r')
-    # visualizer.save_images(webpage, visuals, img_path)
+    img_path = model.get_image_paths()[0]
+    print('%04d/%04d: process image... %s' % (i, len(dataset), img_path), end='\r')
+    image_path = img_path.split('/')[-2] + '/' + img_path.split('/')[-1]
+    pose = model.get_current_pose()
+    visualizer.save_estimated_pose(image_path, pose)
     err_p, err_o = model.get_current_errors()
+    # visualizer.save_estimated_pose(image_path, [err_p, err_o])
     err_pos.append(err_p)
     err_ori.append(err_o)
     err.append([err_p, err_o])
