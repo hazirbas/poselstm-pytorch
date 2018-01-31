@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn import init
+from torch.nn import functional as F
 import functools
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
@@ -536,8 +537,8 @@ class RegressionHead(nn.Module):
         output = self.cls_fc_pose(output.view(output.size(0), -1))
         output_xy = self.cls_fc_xy(output)
         output_wpqr = self.cls_fc_wpqr(output)
-        norm = torch.norm(output_wpqr, p=2, dim=1, keepdim=True)
-        return [output_xy, output_wpqr.div(norm)]
+        output_wpqr = F.normalize(output_wpqr, p=2, dim=1)
+        return [output_xy, output_wpqr]
 
 # define inception block for GoogleNet
 class InceptionBlock(nn.Module):
