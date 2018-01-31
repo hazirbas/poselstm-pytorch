@@ -84,9 +84,8 @@ class PoseNetModel(BaseModel):
         self.loss_aux = np.array([0, 0, 0, 0, 0], dtype=np.float)
         loss_weights = [self.opt.beta*0.3, self.opt.beta*0.3, self.opt.beta]
         for l, beta in enumerate(loss_weights):
-            ori_gt = F.normalize(self.real_B[:, 3:], p=2, dim=1)
-
             mse_pos = self.criterionXYZ[l](self.fake_B[2*l], self.real_B[:, 0:3])
+            ori_gt = F.normalize(self.real_B[:, 3:], p=2, dim=1)
             mse_ori = self.criterionWPQR[l](self.fake_B[2*l+1], ori_gt) * beta
             self.loss_G += mse_pos + mse_ori
             self.loss_aux[l] = self.loss_G.data[0]
@@ -113,8 +112,8 @@ class PoseNetModel(BaseModel):
                                 ('mse_ori_final', self.loss_aux[4]),
                                 ])
 
-        ori_gt = F.normalize(self.real_B[:, 3:], p=2, dim=1)
         pos_err = torch.dist(self.fake_B[0], self.real_B[:, 0:3])
+        ori_gt = F.normalize(self.real_B[:, 3:], p=2, dim=1)
         abs_distance = torch.abs((ori_gt.mul(self.fake_B[1])).sum())
         # abs_distance = torch.clamp(abs_distance, max=1)
         ori_err = 2*180/numpy.pi* torch.acos(abs_distance)
