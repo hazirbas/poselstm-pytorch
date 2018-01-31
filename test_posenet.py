@@ -16,13 +16,14 @@ opt.no_flip = True  # no flip
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
 model = create_model(opt)
-visualizer = Visualizer(opt)
 # create website
 # web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
 # webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.which_epoch))
 results_dir = os.path.join(opt.results_dir, opt.name)
 if not os.path.exists(results_dir):
     os.makedirs(results_dir)
+visualizer = Visualizer(opt)
+
 # test
 err_pos = []
 err_ori = []
@@ -45,5 +46,6 @@ for i, data in enumerate(dataset):
 
 # webpage.save()
 # print(numpy.median(err, axis=0))
+print()
 print("median position: {0:.2f}".format(numpy.median(err_pos)))
 print("median orientat: {0:.2f}".format(numpy.median(err_ori)))
