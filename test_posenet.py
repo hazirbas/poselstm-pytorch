@@ -23,8 +23,10 @@ results_dir = os.path.join(opt.results_dir, opt.name)
 if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 
-testepochs = numpy.arange(150, 201, 5)
-testfile = open(os.path.join(results_dir, 'test_median.txt'), 'w')
+testepochs = ['latest']
+testepochs = numpy.arange(150, 251, 5)
+# testepochs = numpy.arange(255, 306, 5)
+testfile = open(os.path.join(results_dir, 'test_median.txt'), 'a')
 testfile.write('epoch medX medQ\n')
 testfile.write('=================\n')
 
@@ -55,7 +57,7 @@ for testepoch in testepochs:
     print()
     print("median position: {0:.2f}".format(numpy.median(err_pos)))
     print("median orientat: {0:.2f}".format(numpy.median(err_ori)))
-    testfile.write("{0:<5d} {1:.2f} {2:.2f}\n".format(testepoch,
+    testfile.write("{0:<5} {1:.2f} {2:.2f}\n".format(testepoch,
                                                       numpy.median(err_pos),
                                                       numpy.median(err_ori)))
     testfile.flush()
