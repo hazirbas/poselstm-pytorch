@@ -1,4 +1,4 @@
-## Posenet implementation of PoseNetModel
+## Posenet implementation in PyTorch
 This is an ongoing PyTroch implementation for PoseNet, developed based on [Pix2Pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) code.
 
 ## Prerequisites
@@ -27,7 +27,7 @@ python util/compute_image_mean.py --dataroot datasets/KingsCollege --height 256 
 ```bash
 CUDA_VISIBLE_DEVICES='0' python train.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --beta 500 --niter 400
 ```
-- To view training results and loss plots, pass `--display_id 0' to train.py and run `python -m visdom.server` and click the URL http://localhost:8097. To see more intermediate results, check out `./checkpoints/posenet/KingsCollege/beta500/web/index.html`
+- To view training results and loss plots, run `python -m visdom.server` and click the URL http://localhost:8097. To see more intermediate results, check out `./checkpoints/posenet/KingsCollege/beta500/web/index.html`
 - Test the model:
 ```bash
 CUDA_VISIBLE_DEVICES='0' python test.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500
@@ -37,7 +37,7 @@ The test results will be saved to a html file here: `./results/posenet/KingsColl
 ### Initialize model with pretrained googlenet on Places dataset
 If you would like to initialize the model with pretrained weights, download the places-googlenet.pickle file under pretrained_models/ folder:
 ``` bash
-wget ...
+wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlenet.pickle
 ```
 
 ## Citation
@@ -47,13 +47,6 @@ wget ...
   author={Alex Kendall, Matthew Grimes and Roberto Cipolla },
   journal={ICCV},
   year={2015}
-}
-
-@article{pix2pix2016,
-  title={Image-to-Image Translation with Conditional Adversarial Networks},
-  author={Isola, Phillip and Zhu, Jun-Yan and Zhou, Tinghui and Efros, Alexei A},
-  journal={arxiv},
-  year={2016}
 }
 ```
 ## Acknowledgments
