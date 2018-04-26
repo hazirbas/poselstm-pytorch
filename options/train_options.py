@@ -23,6 +23,6 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--lr_policy', type=str, default='lambda', help='learning rate policy: lambda|step|plateau')
         self.parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
         self.parser.add_argument('--beta', type=float, default=500, help='beta factor used in posenet.')
-        self.parser.add_argument('--init_weights', type=str, default='', help='initiliaze network from, e.g., pretrained_models/places-googlenet.pickle')
+        self.parser.add_argument('--init_weights', type=str, default='pretrained_models/places-googlenet.pickle', help='initiliaze network from, e.g., pretrained_models/places-googlenet.pickle')
 
         self.isTrain = True
