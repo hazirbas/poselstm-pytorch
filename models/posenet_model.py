@@ -24,9 +24,11 @@ class PoseNetModel(BaseModel):
         self.input_B = self.Tensor(opt.batchSize, opt.output_nc)
 
         # load/define networks
-        googlenet_file = open("/remwork/atcremers72/hazirbas/projects/posenet_bashing/pretrained_models/places-googlenet/places-googlenet.pickle", "rb")
-        googlenet_weights = pickle.load(googlenet_file, encoding="bytes")
-        googlenet_file.close()
+        googlenet_weights = None
+        if self.isTrain and opt.init_weights != '':
+            googlenet_file = open(opt.init_weights, "rb")
+            googlenet_weights = pickle.load(googlenet_file, encoding="bytes")
+            googlenet_file.close()
         self.mean_image = np.load(os.path.join(opt.dataroot , 'mean_image.npy'))
 
         self.netG = networks.define_G(opt.input_nc, None, None, opt.which_model_netG,

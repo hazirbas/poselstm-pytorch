@@ -40,8 +40,6 @@ for testepoch in testepochs:
     err = []
     print("epoch: "+ str(opt.which_epoch))
     for i, data in enumerate(dataset):
-        # if i >= opt.how_many:
-        #     break
         model.set_input(data)
         model.test()
         img_path = model.get_image_paths()[0]
