@@ -2,7 +2,7 @@
 def create_model(opt):
     model = None
     print(opt.model)
-    elif opt.model == 'posenet':
+    if opt.model == 'posenet':
         from .posenet_model import PoseNetModel
         model = PoseNetModel()
     else:
