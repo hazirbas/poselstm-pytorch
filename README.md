@@ -40,7 +40,7 @@ If you would like to initialize the model with pretrained weights, download the 
 wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlenet.pickle
 ```
 ### Optimization scheme and loss weights
-We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890)
+We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890).
 
 | Dataset       | beta |
 | ------------- |:----:|
@@ -51,11 +51,20 @@ We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.0789
 
 ## Citation
 ```
-@article{PoseNet15,
+@inproceedings{PoseNet15,
   title={PoseNet: A Convolutional Network for Real-Time 6-DOF Camera Relocalization},
   author={Alex Kendall, Matthew Grimes and Roberto Cipolla },
   journal={ICCV},
   year={2015}
+}
+@inproceedings{PoseLSTM17,
+  author = {Florian Walch and Caner Hazirbas and Laura Leal-Taixé and Torsten Sattler and Sebastian Hilsenbeck and Daniel Cremers},
+  title = {Image-based localization using LSTMs for structured feature correlation},
+  month = {October},
+  year = {2017},
+  booktitle = {ICCV},
+  eprint = {1611.07890},
+  url = {https://github.com/NavVisResearch/NavVis-Indoor-Dataset},
 }
 ```
 ## Acknowledgments
