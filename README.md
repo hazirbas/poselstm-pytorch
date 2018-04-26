@@ -39,6 +39,15 @@ If you would like to initialize the model with pretrained weights, download the 
 ``` bash
 wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlenet.pickle
 ```
+### Optimization scheme and loss weights
+We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890)
+
+| Dataset       | beta |
+| ------------- |:----:|
+| KingsCollege  | 500  |
+| ShopFacade    | 100  |
+| StMarysChurch | 250  |
+| OldHospital   | 1500 |
 
 ## Citation
 ```
