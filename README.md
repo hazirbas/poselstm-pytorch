@@ -43,7 +43,7 @@ wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlen
 We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890).
 
 | Dataset       | beta | PoseNet | PyPoseNet |
-| ------------- |:----:| tba. | tba. |
+| ------------- |:----:| :----: | :----: |
 | ShopFacade    | 100  | tba. | tba. |
 | KingsCollege  | 500  | tba. | tba. |
 | StMarysChurch | 250  | tba. | tba. |
