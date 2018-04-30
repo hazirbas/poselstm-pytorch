@@ -1,5 +1,5 @@
 ## Posenet implementation in PyTorch
-This is an ongoing PyTroch implementation for PoseNet, developed based on [Pix2Pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) code.
+This is an ongoing PyTorch implementation for PoseNet, developed based on [Pix2Pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) code.
 
 ## Prerequisites
 - Linux
@@ -42,12 +42,12 @@ wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlen
 ### Optimization scheme and loss weights
 We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890).
 
-| Dataset       | beta |
-| ------------- |:----:|
-| KingsCollege  | 500  |
-| ShopFacade    | 100  |
-| StMarysChurch | 250  |
-| OldHospital   | 1500 |
+| Dataset       | beta | PoseNet | PyPoseNet |
+| ------------- |:----:| tba. | tba. |
+| ShopFacade    | 100  | tba. | tba. |
+| KingsCollege  | 500  | tba. | tba. |
+| StMarysChurch | 250  | tba. | tba. |
+| OldHospital   | 1500 | tba. | tba. |
 
 ## Citation
 ```
