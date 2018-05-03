@@ -42,9 +42,9 @@ wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlen
 ### Optimization scheme and loss weights
 We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890).
 
-| Dataset       | beta | PoseNet | PyPoseNet |
-| ------------- |:----:| :----: | :----: |
-| ShopFacade    | 100  | tba. | tba. |
+| Dataset       | beta | TFPoseNet | PyPoseNet | pymodel |
+| ------------- |:----:| :----: | :----: | :----: |
+| ShopFacade    | 100  | 1.46° 8.08m | 1.58° 7.90m | [epoch180](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) |
 | KingsCollege  | 500  | tba. | tba. |
 | StMarysChurch | 250  | tba. | tba. |
 | OldHospital   | 1500 | tba. | tba. |
