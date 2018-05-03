@@ -40,7 +40,7 @@ If you would like to initialize the model with pretrained weights, download the 
 wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlenet.pickle
 ```
 ### Optimization scheme and loss weights
-We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890).
+We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890). Best models are determined by the median position and quaternion errors.
 
 | Dataset       | beta | TFPoseNet | PyPoseNet | pymodel |
 | ------------- |:----:| :----: | :----: | :----: |
