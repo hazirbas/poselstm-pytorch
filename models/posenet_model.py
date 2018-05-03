@@ -29,7 +29,7 @@ class PoseNetModel(BaseModel):
             googlenet_file = open(opt.init_weights, "rb")
             googlenet_weights = pickle.load(googlenet_file, encoding="bytes")
             googlenet_file.close()
-            print('initializing the weights from '+opt.init_weights)
+            print('initializing the weights from '+ opt.init_weights)
         self.mean_image = np.load(os.path.join(opt.dataroot , 'mean_image.npy'))
 
         self.netG = networks.define_G(opt.input_nc, None, None, opt.which_model_netG,

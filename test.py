@@ -24,7 +24,7 @@ if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 
 testepochs = ['latest']
-testepochs = numpy.arange(150, 500, 5)
+testepochs = numpy.arange(150, 501, 5)
 # testepochs = numpy.arange(255, 306, 5)
 testfile = open(os.path.join(results_dir, 'test_median.txt'), 'a')
 testfile.write('epoch medX medQ\n')
