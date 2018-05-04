@@ -1,4 +1,4 @@
-## Posenet implementation in PyTorch
+# Posenet implementation in PyTorch
 This is an ongoing PyTorch implementation for PoseNet, developed based on [Pix2Pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) code.
 
 ## Prerequisites
@@ -27,12 +27,12 @@ python util/compute_image_mean.py --dataroot datasets/KingsCollege --height 256 
 ```bash
 CUDA_VISIBLE_DEVICES='0' python train.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --beta 500 --niter 500
 ```
-- To view training results and loss plots, run `python -m visdom.server` and click the URL http://localhost:8097. Checkpoints are saved under `./checkpoints/posenet/KingsCollege/beta500/`.
+- To view training errors and loss plots, run `python -m visdom.server` and click the URL http://localhost:8097. Checkpoints are saved under `./checkpoints/posenet/KingsCollege/beta500/`.
 - Test the model:
 ```bash
 CUDA_VISIBLE_DEVICES='0' python test.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500
 ```
-The test results will be saved to a html file here: `./results/posenet/KingsCollege/beta500/`.
+The test errors will be saved to a text file under `./results/posenet/KingsCollege/beta500/`.
 
 ### Initialize model with pretrained googlenet on Places dataset
 If you would like to initialize the model with pretrained weights, download the places-googlenet.pickle file under pretrained_models/ folder:
@@ -47,7 +47,7 @@ We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.0789
 | ShopFacade    | 100  | 1.46m 8.08° | 1.26m 7.55° | [epoch350](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) |
 | KingsCollege  | 500  | 1.92m 5.40° | 1.72m 5.40° | [epoch445](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/KingsCollege.zip) |
 | StMarysChurch | 250  | tba. | tba. |
-| OldHospital   | 1500 | tba. | tba. |
+| OldHospital   | 1500 | 2.31m 5.38° | 2.40m 5.71° | [epoch375](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/OldHospital.zip) |
 
 ## Citation
 ```
