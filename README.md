@@ -44,7 +44,7 @@ We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.0789
 
 | Dataset       | beta | TFPoseNet | PyPoseNet | pymodel |
 | ------------- |:----:| :----: | :----: | :----: |
-| ShopFacade    | 100  | 1.46° 8.08m | 1.58° 7.90m | [epoch180](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) |
+| ShopFacade    | 100  | 1.46m 8.08° | 1.26m 7.55° | [epoch350](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) |
 | KingsCollege  | 500  | tba. | tba. |
 | StMarysChurch | 250  | tba. | tba. |
 | OldHospital   | 1500 | tba. | tba. |
