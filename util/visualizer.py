@@ -148,6 +148,11 @@ class Visualizer():
             links.append(image_name)
         webpage.add_images(ims, txts, links, width=self.win_size)
 
+    def change_log_path(self, which_epoch):
+        self.log_name = os.path.join(self.opt.results_dir,
+                                     self.opt.name,
+                                     '%s_%s.txt' % (self.opt.phase, which_epoch))
+
     def save_estimated_pose(self, image_path, pose):
         with open(self.log_name, "a") as log_file:
             pose_str = ''.join('%.6f ' % p for p in pose)

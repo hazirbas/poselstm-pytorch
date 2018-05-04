@@ -21,7 +21,7 @@ pip install -r requirements.txt
 - Download a Cambridge Landscape dataset (e.g. [KingsCollege](http://mi.eng.cam.ac.uk/projects/relocalisation/#dataset)) under datasets/ folder.
 - Compute image mean
 ```bash
-python util/compute_image_mean.py --dataroot datasets/KingsCollege --height 256 --width 455
+python util/compute_image_mean.py --dataroot datasets/KingsCollege --height 256 --width 455 --save_resized_imgs
 ```
 - Train a model:
 ```bash
@@ -45,7 +45,7 @@ We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.0789
 | Dataset       | beta | TFPoseNet | PyPoseNet | pymodel |
 | ------------- |:----:| :----: | :----: | :----: |
 | ShopFacade    | 100  | 1.46m 8.08° | 1.26m 7.55° | [epoch350](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) |
-| KingsCollege  | 500  | tba. | tba. |
+| KingsCollege  | 500  | 1.92m 5.40° | 1.72m 5.40° | [epoch445](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/KingsCollege.zip) |
 | StMarysChurch | 250  | tba. | tba. |
 | OldHospital   | 1500 | tba. | tba. |
 
