@@ -47,7 +47,7 @@ We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.0789
 | KingsCollege  | 500  | 1.92m 5.40° | 1.72m 5.40° | [epoch445](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/KingsCollege.zip) |
 | OldHospital   | 1500 | 2.31m 5.38° | 2.40m 5.71° | [epoch375](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/OldHospital.zip) |
 | ShopFacade    | 100  | 1.46m 8.08° | 1.26m 7.55° | [epoch350](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) |
-| StMarysChurch | 250  | 2.65m 8.48°| tba. |
+| StMarysChurch | 250  | 2.65m 8.48° | 2.54m 9.62° | [epoch500](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/StMarysChurch.zip) |
 
 ## Citation
 ```
