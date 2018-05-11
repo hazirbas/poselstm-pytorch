@@ -91,10 +91,10 @@ class PoseNetModel(BaseModel):
             ori_gt = F.normalize(self.real_B[:, 3:], p=2, dim=1)
             mse_ori = self.criterionWPQR[l](self.fake_B[2*l+1], ori_gt) * beta
             self.loss_G += mse_pos + mse_ori
-            self.loss_aux[l] = self.loss_G.data[0]
+            self.loss_aux[l] = self.loss_G.item()
             if l == 2:
-                self.loss_aux[l+1] = mse_pos.data[0]
-                self.loss_aux[l+2] = mse_ori.data[0]
+                self.loss_aux[l+1] = mse_pos.item()
+                self.loss_aux[l+2] = mse_ori.item()
         self.loss_G.backward()
 
     def optimize_parameters(self):
@@ -120,7 +120,7 @@ class PoseNetModel(BaseModel):
         abs_distance = torch.abs((ori_gt.mul(self.fake_B[1])).sum())
         # abs_distance = torch.clamp(abs_distance, max=1)
         ori_err = 2*180/numpy.pi* torch.acos(abs_distance)
-        return [pos_err[0].data[0], ori_err[0].data[0]]
+        return [pos_err[0].item(), ori_err[0].item()]
 
     def get_current_pose(self):
         return numpy.concatenate((self.fake_B[0].data[0].cpu().numpy(),
