@@ -68,15 +68,11 @@ class PoseNetModel(BaseModel):
         self.input_B.resize_(input_B.size()).copy_(input_B)
 
     def forward(self):
-        self.real_A = Variable(self.input_A)
-        self.fake_B = self.netG(self.real_A)
-        self.real_B = Variable(self.input_B)
+        self.pred_B = self.netG(self.input_A)
 
     # no backprop gradients
     def test(self):
-        self.real_A = Variable(self.input_A, volatile=True)
-        self.fake_B = self.netG(self.real_A)
-        self.real_B = Variable(self.input_B, volatile=True)
+        self.forward()
 
     # get image paths
     def get_image_paths(self):
@@ -87,9 +83,9 @@ class PoseNetModel(BaseModel):
         self.loss_aux = np.array([0, 0, 0, 0, 0], dtype=np.float)
         loss_weights = [self.opt.beta*0.3, self.opt.beta*0.3, self.opt.beta]
         for l, beta in enumerate(loss_weights):
-            mse_pos = self.criterionXYZ[l](self.fake_B[2*l], self.real_B[:, 0:3])
-            ori_gt = F.normalize(self.real_B[:, 3:], p=2, dim=1)
-            mse_ori = self.criterionWPQR[l](self.fake_B[2*l+1], ori_gt) * beta
+            mse_pos = self.criterionXYZ[l](self.pred_B[2*l], self.input_B[:, 0:3])
+            ori_gt = F.normalize(self.input_B[:, 3:], p=2, dim=1)
+            mse_ori = self.criterionWPQR[l](self.pred_B[2*l+1], ori_gt) * beta
             self.loss_G += mse_pos + mse_ori
             self.loss_aux[l] = self.loss_G.item()
             if l == 2:
@@ -115,22 +111,22 @@ class PoseNetModel(BaseModel):
                                 ('mse_ori_final', self.loss_aux[4]),
                                 ])
 
-        pos_err = torch.dist(self.fake_B[0], self.real_B[:, 0:3])
-        ori_gt = F.normalize(self.real_B[:, 3:], p=2, dim=1)
-        abs_distance = torch.abs((ori_gt.mul(self.fake_B[1])).sum())
+        pos_err = torch.dist(self.pred_B[0], self.input_B[:, 0:3])
+        ori_gt = F.normalize(self.input_B[:, 3:], p=2, dim=1)
+        abs_distance = torch.abs((ori_gt.mul(self.pred_B[1])).sum())
         # abs_distance = torch.clamp(abs_distance, max=1)
         ori_err = 2*180/numpy.pi* torch.acos(abs_distance)
-        return [pos_err[0].item(), ori_err[0].item()]
+        return [pos_err.item(), ori_err.item()]
 
     def get_current_pose(self):
-        return numpy.concatenate((self.fake_B[0].data[0].cpu().numpy(),
-                                  self.fake_B[1].data[0].cpu().numpy()))
+        return numpy.concatenate((self.pred_B[0].data[0].cpu().numpy(),
+                                  self.pred_B[1].data[0].cpu().numpy()))
 
     def get_current_visuals(self):
-        real_A = util.tensor2im(self.real_A.data)
-        # fake_B = util.tensor2im(self.fake_B.data)
-        # real_B = util.tensor2im(self.real_B.data)
-        return OrderedDict([('real_A', real_A)])
+        input_A = util.tensor2im(self.input_A.data)
+        # pred_B = util.tensor2im(self.pred_B.data)
+        # input_B = util.tensor2im(self.input_B.data)
+        return OrderedDict([('input_A', input_A)])
 
     def save(self, label):
         self.save_network(self.netG, 'G', label, self.gpu_ids)
