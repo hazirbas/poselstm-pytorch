@@ -1,14 +1,3 @@
-## SEEDING
-import torch
-import numpy
-import random
-torch.manual_seed(0)
-numpy.random.seed(0)
-random.seed(0)
-# torch.backends.cudnn.enabled = False
-torch.backends.cudnn.deterministic = True
-## SEEDING
-
 import time
 from options.train_options import TrainOptions
 from data.data_loader import CreateDataLoader
@@ -16,6 +5,17 @@ from models.models import create_model
 from util.visualizer import Visualizer
 
 opt = TrainOptions().parse()
+## SEEDING
+import torch
+import numpy
+import random
+torch.manual_seed(opt.seed)
+numpy.random.seed(opt.seed)
+random.seed(opt.seed)
+# torch.backends.cudnn.enabled = False
+torch.backends.cudnn.deterministic = True
+## SEEDING
+
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
 dataset_size = len(data_loader)

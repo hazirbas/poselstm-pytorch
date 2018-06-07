@@ -22,11 +22,16 @@ class CustomDatasetDataLoader(BaseDataLoader):
     def initialize(self, opt):
         BaseDataLoader.initialize(self, opt)
         self.dataset = CreateDataset(opt)
+
+        def init_fn(worker_id):
+            torch.manual_seed(opt.seed)
+
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,
             batch_size=opt.batchSize,
             shuffle=not opt.serial_batches,
-            num_workers=int(opt.nThreads))
+            num_workers=int(opt.nThreads),
+            worker_init_fn=init_fn)
 
     def load_data(self):
         return self

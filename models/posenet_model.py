@@ -42,8 +42,7 @@ class PoseNetModel(BaseModel):
         if self.isTrain:
             self.old_lr = opt.lr
             # define loss functions
-            self.criterionXYZ = [torch.nn.MSELoss()] * 3
-            self.criterionWPQR = [torch.nn.MSELoss()] * 3
+            self.criterion = torch.nn.MSELoss()
 
             # initialize optimizers
             self.schedulers = []
@@ -80,17 +79,16 @@ class PoseNetModel(BaseModel):
 
     def backward_G(self):
         self.loss_G = 0
-        self.loss_aux = np.array([0, 0, 0, 0, 0], dtype=np.float)
+        self.loss_pos = 0
+        self.loss_ori = 0
         loss_weights = [self.opt.beta*0.3, self.opt.beta*0.3, self.opt.beta]
         for l, beta in enumerate(loss_weights):
-            mse_pos = self.criterionXYZ[l](self.pred_B[2*l], self.input_B[:, 0:3])
+            mse_pos = self.criterion(self.pred_B[2*l], self.input_B[:, 0:3])
             ori_gt = F.normalize(self.input_B[:, 3:], p=2, dim=1)
-            mse_ori = self.criterionWPQR[l](self.pred_B[2*l+1], ori_gt) * beta
+            mse_ori = self.criterion(self.pred_B[2*l+1], ori_gt) * beta
             self.loss_G += mse_pos + mse_ori
-            self.loss_aux[l] = self.loss_G.item()
-            if l == 2:
-                self.loss_aux[l+1] = mse_pos.item()
-                self.loss_aux[l+2] = mse_ori.item()
+            self.loss_pos += mse_pos.item()
+            self.loss_ori += mse_ori.item()
         self.loss_G.backward()
 
     def optimize_parameters(self):
@@ -101,20 +99,13 @@ class PoseNetModel(BaseModel):
 
     def get_current_errors(self):
         if self.opt.isTrain:
-            # return OrderedDict([('G_aux1', self.loss_aux[0]),
-            #                     ('G_aux2', self.loss_aux[1] - self.loss_aux[0]),
-            #                     ('G_final', self.loss_aux[2] - self.loss_aux[1].sum()),
-            #                     ('mse_pos_final', self.loss_aux[3]),
-            #                     ('mse_ori_final', self.loss_aux[4]),
-            #                     ])
-            return OrderedDict([('mse_pos_final', self.loss_aux[3]),
-                                ('mse_ori_final', self.loss_aux[4]),
+            return OrderedDict([('pos_err', self.loss_pos),
+                                ('ori_err', self.loss_ori),
                                 ])
 
         pos_err = torch.dist(self.pred_B[0], self.input_B[:, 0:3])
         ori_gt = F.normalize(self.input_B[:, 3:], p=2, dim=1)
         abs_distance = torch.abs((ori_gt.mul(self.pred_B[1])).sum())
-        # abs_distance = torch.clamp(abs_distance, max=1)
         ori_err = 2*180/numpy.pi* torch.acos(abs_distance)
         return [pos_err.item(), ori_err.item()]
 
