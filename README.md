@@ -40,14 +40,14 @@ If you would like to initialize the model with pretrained weights, download the 
 wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlenet.pickle
 ```
 ### Optimization scheme and loss weights
-We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890). Best models are determined by the median position and quaternion errors.
+We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890). Best models are determined by the median error wrt position.
 
-| Dataset       | beta | TFPoseNet | PyPoseNet | pymodel |
+| Dataset       | beta | PoseNet | Ours | Model |
 | ------------- |:----:| :----: | :----: | :----: |
-| KingsCollege  | 500  | 1.92m 5.40° | 1.72m 5.40° | [epoch445](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/KingsCollege.zip) |
-| OldHospital   | 1500 | 2.31m 5.38° | 2.40m 5.71° | [epoch375](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/OldHospital.zip) |
-| ShopFacade    | 100  | 1.46m 8.08° | 1.26m 7.55° | [epoch350](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) |
-| StMarysChurch | 250  | 2.65m 8.48° | 2.54m 9.62° | [epoch500](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/StMarysChurch.zip) |
+| King's College  | 500  | 1.92m 5.40° | 1.34m 4.33° | [epoch495](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/KingsCollege.zip) |
+| Old Hospital   | 1500 | 2.31m 5.38° | 2.58m 5.77° | [epoch455](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/OldHospital.zip) |
+| Shop Façade    | 100  | 1.46m 8.08° | 1.44m 8.26° | [epoch470](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) |
+| St Mary's Church | 250  | 2.65m 8.48° | 2.40m 9.56° | [epoch470](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/StMarysChurch.zip) |
 
 ## Citation
 ```
