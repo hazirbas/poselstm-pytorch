@@ -25,12 +25,12 @@ python util/compute_image_mean.py --dataroot datasets/KingsCollege --height 256 
 ```
 - Train a model:
 ```bash
-CUDA_VISIBLE_DEVICES='0' python train.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --beta 500 --niter 500
+python train.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --beta 500 --gpu 0
 ```
-- To view training errors and loss plots, run `python -m visdom.server` and click the URL http://localhost:8097. Checkpoints are saved under `./checkpoints/posenet/KingsCollege/beta500/`.
+- To view training errors and loss plots, set `--display_id 1`, run `python -m visdom.server` and click the URL http://localhost:8097. Checkpoints are saved under `./checkpoints/posenet/KingsCollege/beta500/`.
 - Test the model:
 ```bash
-CUDA_VISIBLE_DEVICES='0' python test.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500
+python test.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --gpu 0
 ```
 The test errors will be saved to a text file under `./results/posenet/KingsCollege/beta500/`.
 
