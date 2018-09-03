@@ -141,7 +141,7 @@ class PoseNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=1),
-            weight_init_googlenet("conv2/3x3_reduce", nn.Conv2d(64, 64, kernel_size=1)),
+            weight_init_googlenet("conv2/3x3_reduce", nn.Conv2d(64, 64, kernel_size=1), weights),
             nn.ReLU(inplace=True),
             weight_init_googlenet("conv2/3x3", nn.Conv2d(64, 192, kernel_size=3, padding=1), weights),
             nn.ReLU(inplace=True),
