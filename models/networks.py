@@ -12,10 +12,19 @@ import numpy as np
 
 
 def weight_init_googlenet(key, module, weights=None):
-    if weights is None:
+
+    if key == "LSTM":
+        for name, param in module.named_parameters():
+            if 'bias' in name:
+                init.constant_(param, 0.0)
+            elif 'weight' in name:
+                init.xavier_normal_(param)
+    elif weights is None:
         init.constant_(module.bias.data, 0.0)
         if key == "XYZ":
             init.normal_(module.weight.data, 0.0, 0.5)
+        elif key == "LSTM":
+            init.xavier_normal_(module.weight.data)
         else:
             init.normal_(module.weight.data, 0.0, 0.01)
     else:
@@ -39,18 +48,19 @@ def get_scheduler(optimizer, opt):
     return scheduler
 
 
-def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch', use_dropout=False, init_type='normal', gpu_ids=[],
-             init_from=None, isTest=False):
+def define_network(input_nc, lstm_hidden_size, model, init_from=None, isTest=False, gpu_ids=[]):
     netG = None
     use_gpu = len(gpu_ids) > 0
 
     if use_gpu:
         assert(torch.cuda.is_available())
 
-    if which_model_netG == 'posenet':
+    if model == 'posenet':
         netG = PoseNet(input_nc, weights=init_from, isTest=isTest, gpu_ids=gpu_ids)
+    elif model == 'poselstm':
+        netG = PoseLSTM(input_nc, lstm_hidden_size, weights=init_from, isTest=isTest, gpu_ids=gpu_ids)
     else:
-        raise NotImplementedError('Generator model name [%s] is not recognized' % which_model_netG)
+        raise NotImplementedError('Model name [%s] is not recognized' % model)
     if len(gpu_ids) > 0:
         netG.cuda(gpu_ids[0])
     return netG
@@ -61,29 +71,48 @@ def define_G(input_nc, output_nc, ngf, which_model_netG, norm='batch', use_dropo
 
 # defines the regression heads for googlenet
 class RegressionHead(nn.Module):
-    def __init__(self, lossID, weights=None):
+    def __init__(self, lossID, weights=None, lstm_hidden_size=None):
         super(RegressionHead, self).__init__()
+        self.has_lstm = lstm_hidden_size != None
+        dropout_rate = 0.5 if lossID == "loss3" else 0.7
+        nc_loss = {"loss1": 512, "loss2": 528}
+        nc_cls = [1024, 2048] if lstm_hidden_size is None else [lstm_hidden_size*4, lstm_hidden_size*4]
+
+        self.dropout = nn.Dropout(p=dropout_rate)
         if lossID != "loss3":
-            nc = {"loss1": 512, "loss2": 528}
             self.projection = nn.Sequential(*[nn.AvgPool2d(kernel_size=5, stride=3),
-                                              weight_init_googlenet(lossID+"/conv", nn.Conv2d(nc[lossID], 128, kernel_size=1), weights),
+                                              weight_init_googlenet(lossID+"/conv", nn.Conv2d(nc_loss[lossID], 128, kernel_size=1), weights),
                                               nn.ReLU(inplace=True)])
             self.cls_fc_pose = nn.Sequential(*[weight_init_googlenet(lossID+"/fc", nn.Linear(2048, 1024), weights),
-                                               nn.ReLU(inplace=True),
-                                               nn.Dropout(0.7)])
-            self.cls_fc_xy = weight_init_googlenet("XYZ", nn.Linear(1024, 3))
-            self.cls_fc_wpqr = weight_init_googlenet("WPQR", nn.Linear(1024, 4))
+                                               nn.ReLU(inplace=True)])
+            self.cls_fc_xy = weight_init_googlenet("XYZ", nn.Linear(nc_cls[0], 3))
+            self.cls_fc_wpqr = weight_init_googlenet("WPQR", nn.Linear(nc_cls[0], 4))
+            if lstm_hidden_size is not None:
+                self.lstm_pose_lr = weight_init_googlenet("LSTM", nn.LSTM(input_size=32, hidden_size=lstm_hidden_size, bidirectional=True, batch_first=True))
+                self.lstm_pose_ud = weight_init_googlenet("LSTM", nn.LSTM(input_size=32, hidden_size=lstm_hidden_size, bidirectional=True, batch_first=True))
         else:
             self.projection = nn.AvgPool2d(kernel_size=7, stride=1)
             self.cls_fc_pose = nn.Sequential(*[weight_init_googlenet("pose", nn.Linear(1024, 2048)),
-                                               nn.ReLU(inplace=True),
-                                               nn.Dropout(0.5)])
-            self.cls_fc_xy = weight_init_googlenet("XYZ", nn.Linear(2048, 3))
-            self.cls_fc_wpqr = weight_init_googlenet("WPQR", nn.Linear(2048, 4))
+                                               nn.ReLU(inplace=True)])
+            self.cls_fc_xy = weight_init_googlenet("XYZ", nn.Linear(nc_cls[1], 3))
+            self.cls_fc_wpqr = weight_init_googlenet("WPQR", nn.Linear(nc_cls[1], 4))
+
+            if lstm_hidden_size is not None:
+                self.lstm_pose_lr = weight_init_googlenet("LSTM", nn.LSTM(input_size=64, hidden_size=lstm_hidden_size, bidirectional=True, batch_first=True))
+                self.lstm_pose_ud = weight_init_googlenet("LSTM", nn.LSTM(input_size=32, hidden_size=lstm_hidden_size, bidirectional=True, batch_first=True))
 
     def forward(self, input):
         output = self.projection(input)
         output = self.cls_fc_pose(output.view(output.size(0), -1))
+        if self.has_lstm:
+            output = output.view(output.size(0),32, -1)
+            _, (hidden_state_lr, _) = self.lstm_pose_lr(output.permute(0,1,2))
+            _, (hidden_state_ud, _) = self.lstm_pose_ud(output.permute(0,2,1))
+            output = torch.cat((hidden_state_lr[0,:,:],
+                                hidden_state_lr[1,:,:],
+                                hidden_state_ud[0,:,:],
+                                hidden_state_ud[1,:,:]), 1)
+        output = self.dropout(output)
         output_xy = self.cls_fc_xy(output)
         output_wpqr = self.cls_fc_wpqr(output)
         output_wpqr = F.normalize(output_wpqr, p=2, dim=1)
@@ -189,3 +218,13 @@ class PoseNet(nn.Module):
         if not self.isTest:
             return self.cls1_fc(output_4a) + self.cls2_fc(output_4d) +  self.cls3_fc(output_5b)
         return self.cls3_fc(output_5b)
+
+class PoseLSTM(PoseNet):
+    def __init__(self, input_nc, lstm_hidden_size, weights=None, isTest=False,  gpu_ids=[]):
+            super(PoseLSTM, self).__init__(input_nc, weights, isTest, gpu_ids)
+            self.cls1_fc = RegressionHead(lossID="loss1", weights=weights, lstm_hidden_size=lstm_hidden_size)
+            self.cls2_fc = RegressionHead(lossID="loss2", weights=weights, lstm_hidden_size=lstm_hidden_size)
+            self.cls3_fc = RegressionHead(lossID="loss3", weights=weights, lstm_hidden_size=lstm_hidden_size)
+
+            if self.isTest:
+                self.model.eval() # ensure Dropout is deactivated during test

@@ -11,9 +11,9 @@ from . import networks
 import pickle
 import numpy
 
-class PoseNetModel(BaseModel):
+class PoseLSTModel(BaseModel):
     def name(self):
-        return 'PoseNetModel'
+        return 'PoseLSTModel'
 
     def initialize(self, opt):
         BaseModel.initialize(self, opt)
@@ -32,7 +32,7 @@ class PoseNetModel(BaseModel):
             print('initializing the weights from '+ opt.init_weights)
         self.mean_image = np.load(os.path.join(opt.dataroot , 'mean_image.npy'))
 
-        self.netG = networks.define_network(opt.input_nc, None, opt.model,
+        self.netG = networks.define_network(opt.input_nc, opt.lstm_hidden_size, opt.model,
                                       init_from=googlenet_weights, isTest=not self.isTrain,
                                       gpu_ids = self.gpu_ids)
 
