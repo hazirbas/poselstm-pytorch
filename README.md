@@ -1,7 +1,7 @@
 # Posenet implementation in PyTorch
 ## Implementation of [[PoseLSTM]](https://github.com/HEIMDAL13/posenet-pytorch/tree/lstm) is under development.
 
-This is an ongoing PyTorch implementation for PoseNet, developed based on [Pix2Pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) code.
+This is an ongoing PyTorch implementation for PoseLSTM and PoseNet, developed based on [Pix2Pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) code.
 
 ## Prerequisites
 - Linux
@@ -35,6 +35,16 @@ python train.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/b
 python test.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --gpu 0
 ```
 The test errors will be saved to a text file under `./results/posenet/KingsCollege/beta500/`.
+
+### PoseLSTM train/test
+- Train a model:
+```bash
+python train.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --beta 500 --model poselstm --gpu 0
+```
+- Test the model:
+```bash
+python test.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --model poselstm --gpu 0
+```
 
 ### Initialize model with pretrained googlenet on Places dataset
 If you would like to initialize the model with pretrained weights, download the places-googlenet.pickle file under pretrained_models/ folder:
