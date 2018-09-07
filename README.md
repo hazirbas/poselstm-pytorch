@@ -1,4 +1,4 @@
-# Posenet implementation in PyTorch
+# PoseLSTM and PoseNet implementation in PyTorch
 ## Implementation of [[PoseLSTM]](https://github.com/HEIMDAL13/posenet-pytorch/tree/lstm) is under development.
 
 This is an ongoing PyTorch implementation for PoseLSTM and PoseNet, developed based on [Pix2Pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) code.
