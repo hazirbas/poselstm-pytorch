@@ -25,23 +25,23 @@ python util/compute_image_mean.py --dataroot datasets/KingsCollege --height 256 
 ```
 - Train a model:
 ```bash
-python train.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --beta 500 --gpu 0
+python train.py --model posenet --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --beta 500 --gpu 0
 ```
 - To view training errors and loss plots, set `--display_id 1`, run `python -m visdom.server` and click the URL http://localhost:8097. Checkpoints are saved under `./checkpoints/posenet/KingsCollege/beta500/`.
 - Test the model:
 ```bash
-python test.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --gpu 0
+python test.py --model posenet  --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --gpu 0
 ```
 The test errors will be saved to a text file under `./results/posenet/KingsCollege/beta500/`.
 
 ### PoseLSTM train/test
 - Train a model:
 ```bash
-python train.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --beta 500 --model poselstm --gpu 0
+python train.py --model poselstm --dataroot ./datasets/KingsCollege --name poselstm/KingsCollege/beta500 --beta 500 --niter 1200 --gpu 0
 ```
 - Test the model:
 ```bash
-python test.py --dataroot ./datasets/KingsCollege --name posenet/KingsCollege/beta500 --model poselstm --gpu 0
+python test.py --model poselstm --dataroot ./datasets/KingsCollege --name poselstm/KingsCollege/beta500 --gpu 0
 ```
 
 ### Initialize model with pretrained googlenet on Places dataset
@@ -53,11 +53,11 @@ wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlen
 We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890). Best models are determined by the median error wrt position.
 
 | Dataset       | beta | PoseNet (CAFFE) | PoseNet | PoseLSTM |
-| ------------- |:----:| :----: | :----: | :----: | :----: |
-| King's College  | 500  | 1.92m 5.40° | [1.34m 4.33°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/KingsCollege.zip)|tba.|
-| Old Hospital   | 1500 | 2.31m 5.38° | [2.58m 5.77°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/OldHospital.zip)|tba.|
-| Shop Façade    | 100  | 1.46m 8.08° | [1.44m 8.26°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip)|tba.|
-| St Mary's Church | 250  | 2.65m 8.48° | [2.40m 9.56°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/StMarysChurch.zip)|tba.|
+| ------------- |:----:| :----: | :----: | :----: |
+| King's College  | 500  | 1.92m 5.40° | [1.34m 4.33°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/KingsCollege.zip) | tba. |
+| Old Hospital   | 1500 | 2.31m 5.38° | [2.58m 5.77°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/OldHospital.zip) | tba. |
+| Shop Façade    | 100  | 1.46m 8.08° | [1.44m 8.26°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) | tba. |
+| St Mary's Church | 250  | 2.65m 8.48° | [2.40m 9.56°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/StMarysChurch.zip) | tba. |
 
 ## Citation
 ```
