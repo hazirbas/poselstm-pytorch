@@ -16,16 +16,16 @@ opt.no_flip = True  # no flip
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
 
-# create website
-# web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
-# webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.which_epoch))
 results_dir = os.path.join(opt.results_dir, opt.name)
 if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 
-testepochs = ['latest']
 besterror  = [0, float('inf'), float('inf')] # nepoch, medX, medQ
-testepochs = numpy.arange(150, 501, 5)
+if opt.model == 'posenet':
+    testepochs = numpy.arange(450, 500+1, 5)
+else:
+    testepochs = numpy.arange(1150, 1200+1, 5)
+
 testfile = open(os.path.join(results_dir, 'test_median.txt'), 'a')
 testfile.write('epoch medX  medQ\n')
 testfile.write('==================\n')
@@ -34,14 +34,13 @@ model = create_model(opt)
 visualizer = Visualizer(opt)
 
 for testepoch in testepochs:
-    opt.which_epoch = testepoch
-    model.load_network(model.netG, 'G', opt.which_epoch)
-    visualizer.change_log_path(opt.which_epoch)
+    model.load_network(model.netG, 'G', testepoch)
+    visualizer.change_log_path(testepoch)
     # test
     # err_pos = []
     # err_ori = []
     err = []
-    print("epoch: "+ str(opt.which_epoch))
+    print("epoch: "+ str(testepoch))
     for i, data in enumerate(dataset):
         model.set_input(data)
         model.test()
@@ -57,7 +56,7 @@ for testepoch in testepochs:
 
     median_pos = numpy.median(err, axis=0)
     if median_pos[0] < besterror[1]:
-        besterror = [opt.which_epoch, median_pos[0], median_pos[1]]
+        besterror = [testepoch, median_pos[0], median_pos[1]]
     print()
     # print("median position: {0:.2f}".format(numpy.median(err_pos)))
     # print("median orientat: {0:.2f}".format(numpy.median(err_ori)))

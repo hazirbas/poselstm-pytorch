@@ -49,7 +49,7 @@ class PoseNetModel(BaseModel):
             self.optimizers = []
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
                                                 lr=opt.lr, eps=1,
-                                                weight_decay=0.0625,
+                                                weight_decay=1e-3,
                                                 betas=(self.opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             # for optimizer in self.optimizers:
@@ -77,24 +77,24 @@ class PoseNetModel(BaseModel):
     def get_image_paths(self):
         return self.image_paths
 
-    def backward_G(self):
+    def backward(self):
         self.loss_G = 0
         self.loss_pos = 0
         self.loss_ori = 0
-        loss_weights = [self.opt.beta*0.3, self.opt.beta*0.3, self.opt.beta]
-        for l, beta in enumerate(loss_weights):
+        loss_weights = [0.3, 0.3, 1]
+        for l, w in enumerate(loss_weights):
             mse_pos = self.criterion(self.pred_B[2*l], self.input_B[:, 0:3])
             ori_gt = F.normalize(self.input_B[:, 3:], p=2, dim=1)
-            mse_ori = self.criterion(self.pred_B[2*l+1], ori_gt) * beta
-            self.loss_G += mse_pos + mse_ori
-            self.loss_pos += mse_pos.item()
-            self.loss_ori += mse_ori.item()
+            mse_ori = self.criterion(self.pred_B[2*l+1], ori_gt)
+            self.loss_G += (mse_pos + mse_ori * self.opt.beta) * w
+            self.loss_pos += mse_pos.item() * w
+            self.loss_ori += mse_ori.item() * w * self.opt.beta
         self.loss_G.backward()
 
     def optimize_parameters(self):
         self.forward()
         self.optimizer_G.zero_grad()
-        self.backward_G()
+        self.backward()
         self.optimizer_G.step()
 
     def get_current_errors(self):
