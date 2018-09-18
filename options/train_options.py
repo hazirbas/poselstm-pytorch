@@ -17,7 +17,7 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--niter', type=int, default=500, help='# of iter at starting learning rate')
         self.parser.add_argument('--niter_decay', type=int, default=0, help='# of iter to linearly decay learning rate to zero')
         self.parser.add_argument('--beta1', type=float, default=0.9, help='momentum term of adam')
-        self.parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate for adam')
+        self.parser.add_argument('--lr', type=float, default=0.0005, help='initial learning rate for adam')
         self.parser.add_argument('--pool_size', type=int, default=50, help='the size of image buffer that stores previously generated images')
         self.parser.add_argument('--use_html', action='store_true', help='save intermediate training results to [opt.checkpoints_dir]/[opt.name]/web/')
         self.parser.add_argument('--lr_policy', type=str, default='lambda', help='learning rate policy: lambda|step|plateau')
