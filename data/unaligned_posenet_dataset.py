@@ -19,7 +19,7 @@ class UnalignedPoseNetDataset(BaseDataset):
         self.mean_image = numpy.load(os.path.join(self.root , 'mean_image.npy'))
         if opt.model == "poselstm":
             self.mean_image = None
-            print("No mean image subtraction")
+            print("mean image subtraction is deactivated")
 
         self.A_size = len(self.A_paths)
         self.transform = get_posenet_transform(opt, self.mean_image)
