@@ -25,6 +25,7 @@ if opt.model == 'posenet':
     testepochs = numpy.arange(450, 500+1, 5)
 else:
     testepochs = numpy.arange(1150, 1200+1, 5)
+    testepochs = numpy.arange(450, 580+1, 5)
 
 testfile = open(os.path.join(results_dir, 'test_median.txt'), 'a')
 testfile.write('epoch medX  medQ\n')

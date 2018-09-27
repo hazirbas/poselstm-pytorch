@@ -226,5 +226,12 @@ class PoseLSTM(PoseNet):
             self.cls2_fc = RegressionHead(lossID="loss2", weights=weights, lstm_hidden_size=lstm_hidden_size)
             self.cls3_fc = RegressionHead(lossID="loss3", weights=weights, lstm_hidden_size=lstm_hidden_size)
 
+            self.model = nn.Sequential(*[self.inception_3a, self.inception_3b,
+                                       self.inception_4a, self.inception_4b,
+                                       self.inception_4c, self.inception_4d,
+                                       self.inception_4e, self.inception_5a,
+                                       self.inception_5b, self.cls1_fc,
+                                       self.cls2_fc, self.cls3_fc
+                                       ])
             if self.isTest:
                 self.model.eval() # ensure Dropout is deactivated during test

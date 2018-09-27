@@ -49,8 +49,8 @@ class PoseLSTModel(BaseModel):
             self.optimizers = []
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
                                                 lr=opt.lr, eps=1,
-                                                weight_decay=1e-3,
-                                                betas=(self.opt.beta1, 0.999))
+                                                weight_decay=0.0625,
+                                                betas=(self.opt.adambeta1, self.opt.adambeta2))
             self.optimizers.append(self.optimizer_G)
             # for optimizer in self.optimizers:
             #     self.schedulers.append(networks.get_scheduler(optimizer, opt))
