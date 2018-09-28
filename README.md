@@ -50,14 +50,14 @@ If you would like to initialize the model with pretrained weights, download the 
 wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlenet.pickle
 ```
 ### Optimization scheme and loss weights
-We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890). Best models are determined by the median error wrt position.
+We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890). Note that mean subtraction **is not used** in PoseLSTM models.
 
-| Dataset       | beta | PoseNet (CAFFE) | PoseNet | PoseLSTM |
-| ------------- |:----:| :----: | :----: | :----: |
-| King's College  | 500  | 1.92m 5.40° | [1.34m 4.33°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/KingsCollege.zip) | tba. |
-| Old Hospital   | 1500 | 2.31m 5.38° | [2.58m 5.77°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/OldHospital.zip) | tba. |
-| Shop Façade    | 100  | 1.46m 8.08° | [1.44m 8.26°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/ShopFacade.zip) | tba. |
-| St Mary's Church | 250  | 2.65m 8.48° | [2.40m 9.56°](https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/StMarysChurch.zip) | tba. |
+| Dataset       | beta | PoseNet (CAFFE) | PoseNet | PoseLSTM (TF) | PoseLSTM |
+| ------------- |:----:| :----: | :----: | :----: | :----: |
+| King's College  | 500  | 1.92m 5.40° | [1.19m 4.51°](https://vision.in.tum.de/webarchive/hazirbas/poselstm-pytorch/posenet/KingsCollege.zip) | 0.99m 3.65° | [0.90m 3.96°](https://vision.in.tum.de/webarchive/hazirbas/poselstm-pytorch/poselstm/KingsCollege.zip)|
+| Old Hospital   | 1500 | 2.31m 5.38° | [1.91m 4.05°](https://vision.in.tum.de/webarchive/hazirbas/poselstm-pytorch/posenet/OldHospital.zip) | 1.51m 4.29° | [1.79m 4.28°]((https://vision.in.tum.de/webarchive/hazirbas/poselstm-pytorch/poselstm/OldHospital.zip))|
+| Shop Façade    | 100  | 1.46m 8.08° | [1.30m 8.13°](https://vision.in.tum.de/webarchive/hazirbas/poselstm-pytorch/posenet/ShopFacade.zip) | 1.18m 7.44° | [0.98m 6.20°](https://vision.in.tum.de/webarchive/hazirbas/poselstm-pytorch/poselstm/ShopFacade.zip)|
+| St Mary's Church | 250  | 2.65m 8.48° | [2.40m 9.56°](https://vision.in.tum.de/webarchive/hazirbas/poselstm-pytorch/posenet/StMarysChurch.zip) | 1.52m 6.68° | tba. |
 
 ## Citation
 ```
