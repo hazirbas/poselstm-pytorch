@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 ### PoseNet train/test
 - Download a Cambridge Landscape dataset (e.g. [KingsCollege](http://mi.eng.cam.ac.uk/projects/relocalisation/#dataset)) under datasets/ folder.
-- Compute image mean
+- Compute the mean image
 ```bash
 python util/compute_image_mean.py --dataroot datasets/KingsCollege --height 256 --width 455 --save_resized_imgs
 ```
@@ -44,10 +44,10 @@ python train.py --model poselstm --dataroot ./datasets/KingsCollege --name posel
 python test.py --model poselstm --dataroot ./datasets/KingsCollege --name poselstm/KingsCollege/beta500 --gpu 0
 ```
 
-### Initialize model with pretrained googlenet on Places dataset
-If you would like to initialize the model with pretrained weights, download the places-googlenet.pickle file under pretrained_models/ folder:
+### Initialize the network with the pretrained googlenet trained on the Places dataset
+If you would like to initialize the network with the pretrained weights, download the places-googlenet.pickle file under the *pretrained_models/* folder:
 ``` bash
-wget https://vision.in.tum.de/webarchive/hazirbas/posenet-pytorch/places-googlenet.pickle
+wget https://vision.in.tum.de/webarchive/hazirbas/poselstm-pytorch/places-googlenet.pickle
 ```
 ### Optimization scheme and loss weights
 * We use the training scheme defined in [PoseLSTM](https://arxiv.org/abs/1611.07890)
