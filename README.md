@@ -9,7 +9,6 @@ This is the PyTorch implementation for PoseLSTM and PoseNet, developed based on 
 ## Getting Started
 ### Installation
 - Install PyTorch and dependencies from http://pytorch.org
-- Install Torch vision from the source.
 - Clone this repo:
 ```bash
 git clone https://github.com/hazirbas/posenet-pytorch
