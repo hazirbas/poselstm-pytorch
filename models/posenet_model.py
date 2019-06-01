@@ -47,13 +47,25 @@ class PoseNetModel(BaseModel):
             # initialize optimizers
             self.schedulers = []
             self.optimizers = []
+            """
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
                                                 lr=opt.lr, eps=1,
                                                 weight_decay=0.0625,
                                                 betas=(self.opt.adambeta1, self.opt.adambeta2))
+            """
+
+            # PoseNet architecture like descirbed in Kendall et al. (2015) Sec. 3.2
+            # You can pass the options as arguments or comment the following lines out
+            """
+            opt.lr = 0.00001
+            opt.lr_policy = 'step'
+            opt.lr_decay_iters = 80
+            """
+            self.optimizer_G = torch.optim.SGD(self.netG.parameters(), lr=opt.lr, momentum=0.9)
+
             self.optimizers.append(self.optimizer_G)
-            # for optimizer in self.optimizers:
-            #     self.schedulers.append(networks.get_scheduler(optimizer, opt))
+            for optimizer in self.optimizers:
+                self.schedulers.append(networks.get_scheduler(optimizer, opt))
 
         print('---------- Networks initialized -------------')
         # networks.print_network(self.netG)
