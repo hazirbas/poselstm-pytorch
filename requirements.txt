@@ -4,7 +4,7 @@ dominate==2.3.1
 idna==2.6
 numpy==1.14.0
 Pillow==6.2.0
-PyYAML==5.1
+PyYAML==5.4
 pyzmq==16.0.3
 requests==2.20.1
 six==1.11.0
