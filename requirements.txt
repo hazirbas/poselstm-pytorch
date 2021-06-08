@@ -3,7 +3,7 @@ chardet==3.0.4
 dominate==2.3.1
 idna==2.6
 numpy==1.14.0
-Pillow==8.1.1
+Pillow==8.2.0
 PyYAML==5.4
 pyzmq==16.0.3
 requests==2.20.1
