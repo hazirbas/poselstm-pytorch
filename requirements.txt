@@ -2,7 +2,7 @@ certifi==2017.11.5
 chardet==3.0.4
 dominate==2.3.1
 idna==2.6
-numpy==1.14.0
+numpy==1.21.0
 Pillow==9.0.1
 PyYAML==5.4
 pyzmq==16.0.3
