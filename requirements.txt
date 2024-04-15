@@ -6,7 +6,7 @@ numpy==1.22.0
 Pillow==10.3.0
 PyYAML==5.4
 pyzmq==16.0.3
-requests==2.20.1
+requests==2.31.0
 six==1.11.0
 torch==0.4.0
 torchfile==0.1.0
