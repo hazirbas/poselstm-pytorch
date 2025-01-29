@@ -1,4 +1,4 @@
-certifi==2023.7.22
+certifi==2024.7.4
 chardet==3.0.4
 dominate==2.3.1
 idna==3.7
@@ -6,11 +6,11 @@ numpy==1.22.0
 Pillow==10.3.0
 PyYAML==5.4
 pyzmq==16.0.3
-requests==2.31.0
+requests==2.32.0
 six==1.11.0
 torch==2.2.0
 torchfile==0.1.0
 torchvision==0.2.1
 tornado==6.4.2
-urllib3==1.26.18
+urllib3==1.26.19
 visdom==0.1.7
